@@ -1,0 +1,125 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\EksporPdf;
+use App\Models\Naskah;
+use App\Models\Pengaturan;
+use App\Services\ActivityLogService;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+
+class EksporPdfController extends Controller
+{
+    public function index(Request $request): JsonResponse
+    {
+        $query = EksporPdf::with([
+            'naskah:id,perihal,nomor_naskah',
+            'pengekspor:id,nama_lengkap',
+        ]);
+
+        $user = $request->user();
+        if ($user->isSekretaris()) {
+            $query->whereHas('naskah', function ($q) use ($user) {
+                $q->where('dibuat_oleh', $user->id);
+            });
+        }
+
+        $ekspors = $query->orderBy('created_at', 'desc')
+            ->paginate($request->get('per_halaman', 15));
+
+        return response()->json($ekspors);
+    }
+
+    public function ekspor(Request $request, string $naskahId): JsonResponse
+    {
+        $naskah = Naskah::with('pembuat:id,nama_lengkap')->findOrFail($naskahId);
+        $user = $request->user();
+
+        // Sekretaris hanya bisa ekspor draft miliknya
+        if ($user->isSekretaris() && $naskah->dibuat_oleh !== $user->id) {
+            return response()->json(['message' => 'Anda tidak memiliki akses untuk mengekspor naskah ini'], 403);
+        }
+
+        $request->validate([
+            'dengan_watermark' => 'boolean',
+            'dengan_kop' => 'boolean',
+            'teks_watermark' => 'nullable|string|max:100',
+            'ukuran_kertas' => 'in:A4,F4',
+        ]);
+
+        $denganWatermark = $request->boolean('dengan_watermark', false);
+        $denganKop = $request->boolean('dengan_kop', true);
+        $teksWatermark = $request->input('teks_watermark', Pengaturan::getValue('teks_watermark', 'RAHASIA'));
+        $ukuranKertas = $request->input('ukuran_kertas', 'A4');
+
+        $namaOrganisasi = Pengaturan::getValue('nama_organisasi', 'Organisasi');
+        $alamat = Pengaturan::getValue('alamat_organisasi', '');
+
+        // Generate PDF
+        $data = [
+            'naskah' => $naskah,
+            'dengan_kop' => $denganKop,
+            'dengan_watermark' => $denganWatermark,
+            'teks_watermark' => $teksWatermark,
+            'nama_organisasi' => $namaOrganisasi,
+            'alamat' => $alamat,
+        ];
+
+        $paperSize = $ukuranKertas === 'F4' ? [0, 0, 612, 936] : 'A4';
+
+        $pdf = Pdf::loadView('pdf.naskah', $data);
+
+        if ($ukuranKertas === 'F4') {
+            $pdf->setPaper([0, 0, 612, 936]);
+        } else {
+            $pdf->setPaper('A4');
+        }
+
+        $fileName = 'ekspor_' . ($naskah->nomor_naskah ?? $naskah->id) . '_' . time() . '.pdf';
+        $filePath = 'ekspor-pdf/' . $fileName;
+
+        Storage::disk('local')->put($filePath, $pdf->output());
+
+        $eksporPdf = EksporPdf::create([
+            'naskah_id' => $naskah->id,
+            'diekspor_oleh' => $user->id,
+            'file_path' => $filePath,
+            'dengan_watermark' => $denganWatermark,
+            'dengan_kop' => $denganKop,
+            'teks_watermark' => $teksWatermark,
+            'ukuran_kertas' => $ukuranKertas,
+        ]);
+
+        ActivityLogService::log('EKSPOR_PDF', 'NASKAH', $naskah->id, [
+            'file' => $fileName,
+            'opsi' => [
+                'watermark' => $denganWatermark,
+                'kop' => $denganKop,
+                'kertas' => $ukuranKertas,
+            ],
+        ]);
+
+        return response()->json([
+            'message' => 'PDF berhasil diekspor',
+            'ekspor' => $eksporPdf,
+            'download_url' => "/api/ekspor-pdf/{$eksporPdf->id}/download",
+        ]);
+    }
+
+    public function download(string $id): BinaryFileResponse|JsonResponse
+    {
+        $eksporPdf = EksporPdf::findOrFail($id);
+
+        $fullPath = Storage::disk('local')->path($eksporPdf->file_path);
+
+        if (!file_exists($fullPath)) {
+            return response()->json(['message' => 'File tidak ditemukan'], 404);
+        }
+
+        return response()->download($fullPath);
+    }
+}
