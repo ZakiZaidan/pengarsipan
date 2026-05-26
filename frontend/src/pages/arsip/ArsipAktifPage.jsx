@@ -227,14 +227,26 @@ export default function ArsipAktifPage() {
                       <div style={{ fontWeight: '600' }}>Lampiran File PDF Terkait</div>
                     </div>
                   </div>
-                  <a 
-                    href={`http://localhost:8000/storage/${selectedArsip.naskah.file_path}`} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
+                  <button 
                     className="btn btn-primary btn-sm"
+                    onClick={async () => {
+                      try {
+                        const res = await api.get(`/naskah/${selectedArsip.naskah.id}/lampiran`, { responseType: 'blob' });
+                        const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.setAttribute('download', `lampiran_${selectedArsip.naskah.perihal || 'arsip'}.pdf`);
+                        document.body.appendChild(link);
+                        link.click();
+                        link.remove();
+                        window.URL.revokeObjectURL(url);
+                      } catch (err) {
+                        toast.error('Gagal mengunduh lampiran');
+                      }
+                    }}
                   >
                     <Download size={14} /> Download File
-                  </a>
+                  </button>
                 </div>
               )}
             </div>

@@ -62,10 +62,18 @@ export default function EksporPdfPage() {
 
       toast.success('PDF berhasil digenerate!');
       
-      // Trigger download
-      const downloadId = res.data.ekspor?.id || res.data.ekspor;
+      // Trigger download via blob
+      const downloadId = res.data.ekspor?.id;
       if (downloadId) {
-        window.open(`http://localhost:8000/api/ekspor-pdf/${downloadId}/download`, '_blank');
+        const dlRes = await api.get(`/ekspor-pdf/${downloadId}/download`, { responseType: 'blob' });
+        const url = window.URL.createObjectURL(new Blob([dlRes.data], { type: 'application/pdf' }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `dokumen_${downloadId}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
       }
 
       fetchHistoryAndNaskahs();
@@ -77,8 +85,22 @@ export default function EksporPdfPage() {
     }
   };
 
-  const handleDownload = (id) => {
-    window.open(`http://localhost:8000/api/ekspor-pdf/${id}/download`, '_blank');
+  const handleDownload = async (id) => {
+    try {
+      const res = await api.get(`/ekspor-pdf/${id}/download`, {
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `dokumen_${id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error('Gagal mengunduh PDF');
+    }
   };
 
   if (loading && history.length === 0) return <LoadingSpinner />;

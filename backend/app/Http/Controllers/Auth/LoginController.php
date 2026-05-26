@@ -75,6 +75,8 @@ class LoginController extends Controller
             'peran' => $user->peran->value,
             'peran_label' => $user->peran->label(),
             'tanda_tangan_path' => $user->tanda_tangan_path,
+            'stempel_path' => $user->stempel_path,
+            'nomor_wa' => $user->nomor_wa,
             'notifikasi_belum_dibaca' => $user->notifikasis()->belumDibaca()->count(),
         ]);
     }

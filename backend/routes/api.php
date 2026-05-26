@@ -34,6 +34,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/naskah/{id}/kirim', [NaskahController::class, 'kirim']);
     Route::post('/naskah/{id}/arsipkan', [NaskahController::class, 'arsipkan']);
 
+    // Lampiran Download
+    Route::get('/naskah/{id}/lampiran', [NaskahController::class, 'downloadLampiran']);
+
     // Disposisi
     Route::apiResource('disposisi', DisposisiController::class)->only(['index', 'store', 'show']);
     Route::put('/disposisi/{id}/baca', [DisposisiController::class, 'baca']);
@@ -58,6 +61,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('pengguna', PenggunaController::class)->only(['index', 'store', 'show', 'update']);
     Route::get('/pengguna-list', [PenggunaController::class, 'listSemua']);
     Route::post('/profil/upload-ttd', [\App\Http\Controllers\ProfilController::class, 'uploadTtd']);
+    Route::post('/profil/upload-stempel', [\App\Http\Controllers\ProfilController::class, 'uploadStempel']);
 
     // Template Naskah
     Route::apiResource('template-naskah', TemplateNaskahController::class)->only(['index', 'store', 'update', 'destroy']);

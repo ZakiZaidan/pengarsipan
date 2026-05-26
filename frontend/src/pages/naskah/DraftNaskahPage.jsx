@@ -9,14 +9,20 @@ import toast from 'react-hot-toast';
 export default function DraftNaskahPage() {
   const [drafts, setDrafts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('semua'); // 'semua' | 'draft' | 'diajukan'
   const navigate = useNavigate();
 
   const fetchDrafts = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/naskah?jenis=draft');
-      // On the backend, we filter by jenis = draft or status = draft
-      setDrafts(res.data.data || res.data || []);
+      // Fetch naskah keluar yang masih dalam proses (draft, menunggu verifikasi, ditolak, disetujui, ditandatangani)
+      const res = await api.get('/naskah?jenis=keluar');
+      const allNaskah = res.data.data || res.data || [];
+      // Filter hanya yang belum terkirim/diarsipkan (masih dalam proses draft)
+      const draftNaskahs = allNaskah.filter(n => 
+        ['draft', 'menunggu_verifikasi', 'ditolak', 'disetujui', 'ditandatangani'].includes(n.status)
+      );
+      setDrafts(draftNaskahs);
     } catch (err) {
       toast.error('Gagal mengambil daftar draft naskah');
     } finally {
@@ -27,6 +33,13 @@ export default function DraftNaskahPage() {
   useEffect(() => {
     fetchDrafts();
   }, []);
+
+  // Filter drafts based on selected tab
+  const filteredDrafts = drafts.filter(d => {
+    if (filter === 'draft') return d.status === 'draft' || d.status === 'ditolak';
+    if (filter === 'diajukan') return d.status === 'menunggu_verifikasi' || d.status === 'disetujui' || d.status === 'ditandatangani';
+    return true; // 'semua'
+  });
 
   const handleDelete = async (id, e) => {
     e.stopPropagation();
@@ -70,12 +83,34 @@ export default function DraftNaskahPage() {
         </button>
       </div>
 
+      {/* Filter Tabs */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+        <button 
+          className={`btn btn-sm ${filter === 'semua' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setFilter('semua')}
+        >
+          Semua ({drafts.length})
+        </button>
+        <button 
+          className={`btn btn-sm ${filter === 'draft' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setFilter('draft')}
+        >
+          Belum Diajukan ({drafts.filter(d => d.status === 'draft' || d.status === 'ditolak').length})
+        </button>
+        <button 
+          className={`btn btn-sm ${filter === 'diajukan' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setFilter('diajukan')}
+        >
+          Sudah Diajukan ({drafts.filter(d => d.status !== 'draft' && d.status !== 'ditolak').length})
+        </button>
+      </div>
+
       <div className="card">
         <div className="card-body" style={{ padding: 0 }}>
-          {drafts.length === 0 ? (
+          {filteredDrafts.length === 0 ? (
             <div style={{ padding: '48px', textAlign: 'center', color: 'var(--slate-400)' }}>
               <div style={{ marginBottom: '12px' }}><FileText size={40} style={{ opacity: 0.5 }} /></div>
-              Belum ada draft naskah dinas. Silakan klik tombol "Buat Draft Baru" untuk memulai.
+              {filter === 'draft' ? 'Tidak ada draft yang belum diajukan.' : filter === 'diajukan' ? 'Tidak ada draft yang sudah diajukan.' : 'Belum ada draft naskah dinas. Silakan klik tombol "Buat Draft Baru" untuk memulai.'}
             </div>
           ) : (
             <div className="data-table-wrapper">
@@ -90,7 +125,7 @@ export default function DraftNaskahPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {drafts.map((draft) => (
+                  {filteredDrafts.map((draft) => (
                     <tr key={draft.id} onClick={() => navigate(`/naskah/${draft.id}`)} style={{ cursor: 'pointer' }}>
                       <td className="cell-main">{draft.perihal}</td>
                       <td>{draft.nomor_naskah || '-'}</td>
@@ -103,27 +138,36 @@ export default function DraftNaskahPage() {
                       </td>
                       <td style={{ textAlign: 'right' }}>
                         <div className="actions" style={{ justifyContent: 'flex-end' }}>
-                          <button 
-                            className="btn btn-ghost btn-sm" 
-                            title="Edit"
-                            onClick={(e) => { e.stopPropagation(); navigate(`/draft/edit/${draft.id}`); }}
-                          >
-                            <Edit size={16} color="var(--primary-600)" />
-                          </button>
-                          <button 
-                            className="btn btn-ghost btn-sm" 
-                            title="Ajukan Verifikasi"
-                            onClick={(e) => handleAjukan(draft.id, e)}
-                          >
-                            <Send size={16} color="var(--success-600)" />
-                          </button>
-                          <button 
-                            className="btn btn-ghost btn-sm" 
-                            title="Hapus"
-                            onClick={(e) => handleDelete(draft.id, e)}
-                          >
-                            <Trash2 size={16} color="var(--danger-600)" />
-                          </button>
+                          {(draft.status === 'draft' || draft.status === 'ditolak') && (
+                            <>
+                              <button 
+                                className="btn btn-ghost btn-sm" 
+                                title="Edit"
+                                onClick={(e) => { e.stopPropagation(); navigate(`/draft/edit/${draft.id}`); }}
+                              >
+                                <Edit size={16} color="var(--primary-600)" />
+                              </button>
+                              <button 
+                                className="btn btn-ghost btn-sm" 
+                                title="Ajukan Verifikasi"
+                                onClick={(e) => handleAjukan(draft.id, e)}
+                              >
+                                <Send size={16} color="var(--success-600)" />
+                              </button>
+                              <button 
+                                className="btn btn-ghost btn-sm" 
+                                title="Hapus"
+                                onClick={(e) => handleDelete(draft.id, e)}
+                              >
+                                <Trash2 size={16} color="var(--danger-600)" />
+                              </button>
+                            </>
+                          )}
+                          {draft.status !== 'draft' && draft.status !== 'ditolak' && (
+                            <span style={{ fontSize: '11px', color: 'var(--slate-400)' }}>
+                              {STATUS_LABELS[draft.status] || draft.status}
+                            </span>
+                          )}
                         </div>
                       </td>
                     </tr>

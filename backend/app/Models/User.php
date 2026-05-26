@@ -22,6 +22,8 @@ class User extends Authenticatable
         'peran',
         'aktif',
         'tanda_tangan_path',
+        'nomor_wa',
+        'stempel_path',
     ];
 
     protected $hidden = [

@@ -81,18 +81,18 @@ export default function App() {
 
           {/* Draft Naskah */}
           <Route path="draft" element={
-            <PrivateRoute allowedRoles={['sekretaris']}><DraftNaskahPage /></PrivateRoute>
+            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris']}><DraftNaskahPage /></PrivateRoute>
           } />
           <Route path="draft/tambah" element={
-            <PrivateRoute allowedRoles={['sekretaris']}><NaskahForm /></PrivateRoute>
+            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris']}><NaskahForm /></PrivateRoute>
           } />
           <Route path="draft/edit/:id" element={
-            <PrivateRoute allowedRoles={['sekretaris']}><NaskahForm /></PrivateRoute>
+            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris']}><NaskahForm /></PrivateRoute>
           } />
 
           {/* Naskah Masuk */}
           <Route path="naskah-masuk" element={
-            <PrivateRoute allowedRoles={['ketufor', 'waketufor']}><NaskahMasukPage /></PrivateRoute>
+            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris']}><NaskahMasukPage /></PrivateRoute>
           } />
 
           {/* Naskah Keluar */}

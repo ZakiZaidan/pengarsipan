@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Editor } from '@tinymce/tinymce-react';
 import api from '../../services/api';
 import useAuthStore from '../../stores/authStore';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
@@ -29,6 +30,7 @@ export default function NaskahDetailPage() {
   const [naskah, setNaskah] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const editorRef = useRef(null);
 
   // Users list for disposisi dropdown
   const [users, setUsers] = useState([]);
@@ -125,16 +127,62 @@ export default function NaskahDetailPage() {
     }
   };
 
-  const handleTandaTangan = async () => {
-    const isConfirmed = await confirmAlert('Tandatangani Naskah?', 'Tandatangani naskah dinas ini secara digital?', 'Tandatangani');
-    if (!isConfirmed) return;
+  // State for signature editor modal
+  const [showSignEditor, setShowSignEditor] = useState(false);
+  const [signEditorContent, setSignEditorContent] = useState('');
+  const [signEditorMode, setSignEditorMode] = useState('first'); // 'first' | 'second'
+
+  const handleTandaTangan = async (isSecond = false) => {
+    if (!user?.tanda_tangan_path) {
+      toast.error('Silakan unggah Tanda Tangan Anda di menu Profil terlebih dahulu!');
+      return;
+    }
+    // Open editor modal with current naskah content
+    setSignEditorContent(naskah?.isi_naskah || '');
+    setSignEditorMode(isSecond ? 'second' : 'first');
+    setShowSignEditor(true);
+  };
+
+  const handleInsertSignature = (editorInstance) => {
+    if (!editorInstance) return;
+    const ttdUrl = `http://localhost:8000/storage/${user.tanda_tangan_path}`;
+    const label = signEditorMode === 'second' ? 'Penandatangan II' : 'Penandatangan I';
+    const html = `<div style="display: inline-block; text-align: center; margin: 15px 20px 0 0;"><img src="${ttdUrl}" alt="TTE ${label}" style="max-height: 100px; width: auto;" /><br/><span style="font-size: 11px; color: #64748b;">${label}:<br/><strong>${user.nama_lengkap}</strong></span></div>`;
+    editorInstance.insertContent(html);
+  };
+
+  const handleInsertStempel = (editorInstance) => {
+    if (!editorInstance) return;
+    if (!user?.stempel_path) {
+      toast.error('Anda belum mengupload stempel di Profil');
+      return;
+    }
+    const stempelUrl = `http://localhost:8000/storage/${user.stempel_path}`;
+    const html = `<div style="display: inline-block; margin: 10px 20px 0 0;"><img src="${stempelUrl}" alt="Stempel" style="max-height: 80px; width: auto; opacity: 0.9;" /></div>`;
+    editorInstance.insertContent(html);
+  };
+
+  const handleInsertAlignedBlock = (editorInstance, position) => {
+    if (!editorInstance) return;
+    const align = position === 'left' ? 'left' : position === 'right' ? 'right' : 'center';
+    editorInstance.insertContent(`<div style="text-align: ${align}; margin-top: 30px;">&nbsp;</div>`);
+    // Move cursor inside the div
+    editorInstance.selection.select(editorInstance.selection.getNode());
+    editorInstance.selection.collapse(false);
+  };
+
+  const handleSaveSignEditor = async () => {
     try {
       setActionLoading(true);
-      await api.post(`/naskah/${id}/tandatangan`);
-      toast.success('Naskah dinas berhasil ditandatangani!');
+      await api.post(`/naskah/${id}/tandatangan`, { 
+        sebagai_penandatangan_kedua: signEditorMode === 'second',
+        isi_naskah_custom: signEditorContent,
+      });
+      toast.success(signEditorMode === 'second' ? 'Tanda tangan kedua berhasil!' : 'Naskah berhasil ditandatangani!');
+      setShowSignEditor(false);
       fetchNaskah();
     } catch (err) {
-      toast.error('Gagal menandatangani naskah');
+      toast.error(err.response?.data?.message || 'Gagal menandatangani naskah');
     } finally {
       setActionLoading(false);
     }
@@ -299,15 +347,27 @@ export default function NaskahDetailPage() {
                         <div style={{ fontSize: '11px', color: 'var(--slate-400)' }}>Format PDF</div>
                       </div>
                     </div>
-                    <a 
-                      href={`http://localhost:8000/storage/${nask.file_path}`} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
+                    <button 
                       className="btn btn-secondary btn-sm"
                       style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                      onClick={async () => {
+                        try {
+                          const res = await api.get(`/naskah/${nask.id}/lampiran`, { responseType: 'blob' });
+                          const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+                          const link = document.createElement('a');
+                          link.href = url;
+                          link.setAttribute('download', `lampiran_${nask.perihal || nask.id}.pdf`);
+                          document.body.appendChild(link);
+                          link.click();
+                          link.remove();
+                          window.URL.revokeObjectURL(url);
+                        } catch (err) {
+                          toast.error('Gagal mengunduh lampiran');
+                        }
+                      }}
                     >
                       <Download size={14} /> Unduh Berkas
-                    </a>
+                    </button>
                   </div>
                 )}
               </div>
@@ -467,6 +527,34 @@ export default function NaskahDetailPage() {
               {/* Pimpinan actions */}
               {isPimpinan && (
                 <>
+                  {/* Pimpinan yang buat draft sendiri — bisa langsung TTD + stempel tanpa ajukan */}
+                  {isPembuat && (nask.status === 'draft' || nask.status === 'ditolak') && (
+                    <>
+                      <button 
+                        className="btn btn-primary" 
+                        style={{ width: '100%' }}
+                        onClick={() => navigate(`/draft/edit/${id}`)}
+                        disabled={actionLoading}
+                      >
+                        Edit Draft
+                      </button>
+                      <button 
+                        className={`btn ${user?.tanda_tangan_path ? 'btn-success' : 'btn-secondary'}`}
+                        style={{ width: '100%', opacity: user?.tanda_tangan_path ? 1 : 0.7 }}
+                        onClick={() => {
+                          if (!user?.tanda_tangan_path) {
+                            toast.error('Silakan unggah Tanda Tangan Anda di menu Profil terlebih dahulu!');
+                            return;
+                          }
+                          handleTandaTangan();
+                        }}
+                        disabled={actionLoading}
+                      >
+                        {user?.tanda_tangan_path ? '📝 Tandatangani & Stempel' : 'Tanda Tangan Belum Diatur'}
+                      </button>
+                    </>
+                  )}
+
                   {nask.status === 'menunggu_verifikasi' && (
                     <>
                       <button 
@@ -506,14 +594,29 @@ export default function NaskahDetailPage() {
                   )}
 
                   {nask.status === 'ditandatangani' && (
-                    <button 
-                      className="btn btn-success" 
-                      style={{ width: '100%' }}
-                      onClick={handleKirim}
-                      disabled={actionLoading}
-                    >
-                      Kirim & Arsipkan
-                    </button>
+                    <>
+                      {/* Tombol tanda tangan kedua — muncul untuk pimpinan yang punya TTD dan naskah belum punya TTD kedua */}
+                      {user?.tanda_tangan_path && !nask.ditandatangani_oleh_2 && (user?.peran === 'ketufor' || user?.peran === 'waketufor') && (
+                        <button 
+                          className="btn btn-secondary" 
+                          style={{ width: '100%', marginBottom: '8px' }}
+                          onClick={() => handleTandaTangan(true)}
+                          disabled={actionLoading}
+                        >
+                          + Tanda Tangan Kedua
+                        </button>
+                      )}
+                      {(user?.peran === 'ketufor' || user?.peran === 'waketufor') && (
+                        <button 
+                          className="btn btn-success" 
+                          style={{ width: '100%' }}
+                          onClick={handleKirim}
+                          disabled={actionLoading}
+                        >
+                          Kirim & Arsipkan
+                        </button>
+                      )}
+                    </>
                   )}
 
                   {nask.jenis === 'masuk' && (
@@ -677,6 +780,99 @@ export default function NaskahDetailPage() {
                 <button type="submit" className="btn btn-primary">Arsip Dokumen</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Signature Editor Modal */}
+      {showSignEditor && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '20px' }}>
+          <div className="card" style={{ width: '100%', maxWidth: '900px', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+            <div className="card-header" style={{ flexShrink: 0 }}>
+              <h3 className="card-title">
+                {signEditorMode === 'second' ? 'Tambah Tanda Tangan Kedua' : 'Tandatangani Naskah'}
+              </h3>
+              <button className="btn btn-ghost btn-sm" onClick={() => setShowSignEditor(false)}>&times;</button>
+            </div>
+            <div className="card-body" style={{ flex: 1, overflow: 'auto', padding: '16px 24px' }}>
+              <p style={{ fontSize: '13px', color: 'var(--slate-500)', marginBottom: '12px' }}>
+                Posisikan kursor di tempat yang diinginkan, lalu klik tombol untuk menyisipkan. Gunakan tombol posisi untuk mengatur rata kiri/tengah/kanan.
+              </p>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                <button 
+                  type="button" 
+                  className="btn btn-primary btn-sm"
+                  onClick={() => handleInsertSignature(editorRef.current)}
+                >
+                  📝 Sisipkan Tanda Tangan
+                </button>
+                {user?.stempel_path && (
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => handleInsertStempel(editorRef.current)}
+                  >
+                    🔏 Sisipkan Stempel
+                  </button>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                <button 
+                  type="button" 
+                  className="btn btn-ghost btn-sm"
+                  style={{ fontSize: '11px' }}
+                  onClick={() => handleInsertAlignedBlock(editorRef.current, 'left')}
+                >
+                  ⬅ Posisi Kiri Bawah
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-ghost btn-sm"
+                  style={{ fontSize: '11px' }}
+                  onClick={() => handleInsertAlignedBlock(editorRef.current, 'center')}
+                >
+                  ⬇ Posisi Tengah Bawah
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-ghost btn-sm"
+                  style={{ fontSize: '11px' }}
+                  onClick={() => handleInsertAlignedBlock(editorRef.current, 'right')}
+                >
+                  ➡ Posisi Kanan Bawah
+                </button>
+              </div>
+              <Editor
+                apiKey="ern0cy0zzrd7z1v1xf7y0glwofutjfdq8ptz9z7y9btlv2rk"
+                onInit={(evt, editor) => { editorRef.current = editor; }}
+                value={signEditorContent}
+                onEditorChange={(content) => setSignEditorContent(content)}
+                init={{
+                  height: 450,
+                  menubar: 'edit view insert format',
+                  plugins: [
+                    'advlist', 'autolink', 'lists', 'link', 'image',
+                    'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                    'table', 'help', 'wordcount'
+                  ],
+                  toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist | table | removeformat',
+                  content_style: 'body { font-family: "Times New Roman", serif; font-size: 12pt; line-height: 1.6; padding: 20px; }',
+                  branding: false,
+                  promotion: false,
+                }}
+              />
+            </div>
+            <div className="card-footer" style={{ padding: '16px 24px', display: 'flex', justifyContent: 'flex-end', gap: '12px', background: 'var(--slate-50)', borderTop: '1px solid var(--slate-200)', flexShrink: 0 }}>
+              <button type="button" className="btn btn-secondary" onClick={() => setShowSignEditor(false)}>Batal</button>
+              <button 
+                type="button" 
+                className="btn btn-primary" 
+                onClick={handleSaveSignEditor}
+                disabled={actionLoading}
+              >
+                {actionLoading ? 'Menyimpan...' : 'Simpan & Tandatangani'}
+              </button>
+            </div>
           </div>
         </div>
       )}

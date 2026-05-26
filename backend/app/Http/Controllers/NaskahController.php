@@ -8,6 +8,7 @@ use App\Models\Naskah;
 use App\Services\ActivityLogService;
 use App\Services\NomorSuratService;
 use App\Services\NotifikasiService;
+use App\Services\WhatsAppService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -38,8 +39,11 @@ class NaskahController extends Controller
             });
         }
 
-        // Sekretaris hanya lihat milik sendiri (untuk draft)
+        // Sekretaris hanya lihat milik sendiri (untuk draft/naskah keluar yang belum terkirim)
         $user = $request->user();
+        if ($user->isSekretaris() && $request->jenis === 'keluar') {
+            $query->where('dibuat_oleh', $user->id);
+        }
         if ($user->isSekretaris() && $request->jenis === 'draft') {
             $query->where('dibuat_oleh', $user->id);
         }
@@ -97,11 +101,28 @@ class NaskahController extends Controller
         ], 201);
     }
 
+    public function downloadLampiran(string $id)
+    {
+        $naskah = Naskah::findOrFail($id);
+
+        if (!$naskah->file_path) {
+            return response()->json(['message' => 'Naskah tidak memiliki lampiran'], 404);
+        }
+
+        $fullPath = Storage::disk('local')->path($naskah->file_path);
+
+        if (!file_exists($fullPath)) {
+            return response()->json(['message' => 'File lampiran tidak ditemukan'], 404);
+        }
+
+        return response()->download($fullPath);
+    }
     public function show(string $id): JsonResponse
     {
         $naskah = Naskah::with([
             'pembuat:id,nama_lengkap,peran',
             'penyetuju:id,nama_lengkap',
+            'penandatanganKedua:id,nama_lengkap',
             'template:id,nama_template',
             'arsip',
             'disposisis.pengirim:id,nama_lengkap',
@@ -208,6 +229,12 @@ class NaskahController extends Controller
             $naskah->id
         );
 
+        // Kirim notifikasi WhatsApp ke pimpinan
+        WhatsAppService::notifPengajuan(
+            $request->user()->nama_lengkap,
+            $naskah->perihal
+        );
+
         return response()->json(['message' => 'Naskah berhasil diajukan untuk verifikasi']);
     }
 
@@ -238,6 +265,12 @@ class NaskahController extends Controller
             'NASKAH_DISETUJUI',
             $naskah->id
         );
+
+        // Kirim WA ke pembuat naskah
+        $pembuat = $naskah->pembuat;
+        if ($pembuat) {
+            WhatsAppService::notifStatusNaskah($pembuat, $naskah->perihal, 'DISETUJUI');
+        }
 
         return response()->json(['message' => 'Naskah berhasil disetujui']);
     }
@@ -274,6 +307,12 @@ class NaskahController extends Controller
             $naskah->id
         );
 
+        // Kirim WA ke pembuat naskah
+        $pembuat = $naskah->pembuat;
+        if ($pembuat) {
+            WhatsAppService::notifStatusNaskah($pembuat, $naskah->perihal, 'DITOLAK', $request->catatan);
+        }
+
         return response()->json(['message' => 'Naskah berhasil ditolak']);
     }
 
@@ -290,29 +329,62 @@ class NaskahController extends Controller
 
         $naskah = Naskah::findOrFail($id);
 
-        if ($naskah->status !== \App\Enums\StatusNaskahEnum::DISETUJUI) {
-            return response()->json(['message' => 'Naskah harus disetujui terlebih dahulu'], 403);
-        }
+        $isSecondSigner = $request->boolean('sebagai_penandatangan_kedua', false);
 
-        // Inject Signature
-        $ttdUrl = asset('storage/' . $user->tanda_tangan_path);
-        $ttdHtml = '<div style="margin-top: 15px;"><img src="' . $ttdUrl . '" alt="TTE" style="max-height: 100px; width: auto;" /><br/><span style="font-size: 11px; color: #64748b; font-family: sans-serif;">Ditandatangani secara elektronik oleh:<br/><strong>' . $user->nama_lengkap . '</strong></span></div>';
-        
-        $isiNaskah = $naskah->isi_naskah;
-        if (str_contains($isiNaskah, '[TANDA_TANGAN]')) {
-            $isiNaskah = str_replace('[TANDA_TANGAN]', $ttdHtml, $isiNaskah);
+        if (!$isSecondSigner) {
+            // Pimpinan yang buat sendiri bisa langsung TTD dari status draft
+            $allowedStatuses = [\App\Enums\StatusNaskahEnum::DISETUJUI];
+            if ($naskah->dibuat_oleh === $user->id) {
+                $allowedStatuses[] = \App\Enums\StatusNaskahEnum::DRAFT;
+                $allowedStatuses[] = \App\Enums\StatusNaskahEnum::DITOLAK;
+            }
+            if (!in_array($naskah->status, $allowedStatuses)) {
+                return response()->json(['message' => 'Naskah harus disetujui terlebih dahulu'], 403);
+            }
         } else {
-            $isiNaskah .= $ttdHtml;
+            if ($naskah->status !== \App\Enums\StatusNaskahEnum::DITANDATANGANI) {
+                return response()->json(['message' => 'Naskah harus ditandatangani oleh penandatangan pertama terlebih dahulu'], 403);
+            }
         }
 
-        $naskah->update([
-            'status' => 'ditandatangani',
+        // Jika frontend mengirim isi_naskah_custom (dari editor), gunakan itu
+        // Ini berarti user sudah menempatkan TTD/stempel di posisi yang diinginkan
+        if ($request->filled('isi_naskah_custom')) {
+            $isiNaskah = $request->input('isi_naskah_custom');
+        } else {
+            // Fallback: auto-inject di akhir (untuk backward compatibility)
+            $ttdUrl = asset('storage/' . $user->tanda_tangan_path);
+            $label = $isSecondSigner ? 'Penandatangan II' : 'Penandatangan I';
+            $ttdHtml = '<div style="margin-top: 15px; display: inline-block; text-align: center; margin-right: 40px;"><img src="' . $ttdUrl . '" alt="TTE ' . $label . '" style="max-height: 100px; width: auto;" /><br/><span style="font-size: 11px; color: #64748b; font-family: sans-serif;">' . $label . ':<br/><strong>' . $user->nama_lengkap . '</strong></span></div>';
+            
+            $isiNaskah = $naskah->isi_naskah ?? '';
+            if (str_contains($isiNaskah, '[TANDA_TANGAN]')) {
+                $isiNaskah = str_replace('[TANDA_TANGAN]', $ttdHtml, $isiNaskah);
+            } elseif (str_contains($isiNaskah, '[TANDA_TANGAN_2]') && $isSecondSigner) {
+                $isiNaskah = str_replace('[TANDA_TANGAN_2]', $ttdHtml, $isiNaskah);
+            } else {
+                $isiNaskah .= $ttdHtml;
+            }
+        }
+
+        $updateData = [
             'isi_naskah' => $isiNaskah,
+        ];
+
+        if ($isSecondSigner) {
+            $updateData['ditandatangani_oleh_2'] = $user->id;
+        } else {
+            $updateData['status'] = 'ditandatangani';
+        }
+
+        $naskah->update($updateData);
+
+        $label = $isSecondSigner ? 'Penandatangan II' : 'Penandatangan I';
+        ActivityLogService::log('TANDATANGAN_NASKAH', 'NASKAH', $naskah->id, [
+            'penandatangan' => $label,
         ]);
 
-        ActivityLogService::log('TANDATANGAN_NASKAH', 'NASKAH', $naskah->id);
-
-        return response()->json(['message' => 'Naskah berhasil ditandatangani']);
+        return response()->json(['message' => "Naskah berhasil ditandatangani sebagai {$label}"]);
     }
 
     public function kirim(Request $request, string $id): JsonResponse

@@ -170,18 +170,16 @@ export default function LoginPage() {
 
       <div className="login-card">
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-          <div style={{
-            width: '48px',
-            height: '48px',
-            background: 'linear-gradient(135deg, var(--primary-500), var(--accent-500))',
-            borderRadius: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 10px rgba(20, 184, 166, 0.3)'
-          }}>
-            <Shield size={24} color="white" />
-          </div>
+          <img 
+            src="/logo forum.png" 
+            alt="Logo Forum" 
+            style={{
+              width: '80px',
+              height: '80px',
+              objectFit: 'contain',
+              borderRadius: '50%',
+            }}
+          />
         </div>
 
         <h2 className="login-title">Sistem Pengarsipan</h2>

@@ -39,4 +39,34 @@ class ProfilController extends Controller
 
         return response()->json(['message' => 'Gagal mengunggah file'], 400);
     }
+
+    public function uploadStempel(Request $request): JsonResponse
+    {
+        $request->validate([
+            'stempel' => 'required|image|mimes:png,jpg,jpeg|max:2048',
+        ]);
+
+        $user = $request->user();
+
+        if ($request->hasFile('stempel')) {
+            // Hapus stempel lama jika ada
+            if ($user->stempel_path && Storage::disk('public')->exists($user->stempel_path)) {
+                Storage::disk('public')->delete($user->stempel_path);
+            }
+
+            $file = $request->file('stempel');
+            $filename = 'stempel_' . $user->id . '_' . Str::random(5) . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('stempel', $filename, 'public');
+
+            $user->update(['stempel_path' => $path]);
+
+            return response()->json([
+                'message' => 'Stempel berhasil diunggah',
+                'stempel_path' => $path,
+                'stempel_url' => asset('storage/' . $path),
+            ]);
+        }
+
+        return response()->json(['message' => 'Gagal mengunggah file'], 400);
+    }
 }
