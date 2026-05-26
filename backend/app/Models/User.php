@@ -63,6 +63,11 @@ class User extends Authenticatable
         return $this->isKetufor() || $this->isWaketufor();
     }
 
+    public function isKetuaPanitia(): bool
+    {
+        return $this->peran === PeranEnum::KETUA_PANITIA;
+    }
+
     // --- Relationships ---
 
     public function naskahs(): HasMany

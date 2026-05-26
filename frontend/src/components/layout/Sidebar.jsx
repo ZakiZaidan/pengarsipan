@@ -37,6 +37,7 @@ export default function Sidebar() {
       case 'ketufor': return 'Ketua Formatur';
       case 'waketufor': return 'Wakil Ketua Formatur';
       case 'sekretaris': return 'Sekretaris';
+      case 'ketua_panitia': return 'Ketua Panitia';
       default: return role;
     }
   };
@@ -46,11 +47,11 @@ export default function Sidebar() {
     {
       title: 'Menu Utama',
       items: [
-        { name: 'Dashboard', path: '/', icon: LayoutDashboard, roles: ['ketufor', 'waketufor', 'sekretaris'] },
+        { name: 'Dashboard', path: '/', icon: LayoutDashboard, roles: ['ketufor', 'waketufor', 'sekretaris', 'ketua_panitia'] },
         { name: 'Draft Naskah', path: '/draft', icon: FileText, roles: ['ketufor', 'waketufor', 'sekretaris'] },
-        { name: 'Naskah Masuk', path: '/naskah-masuk', icon: Mail, roles: ['ketufor', 'waketufor', 'sekretaris'] },
-        { name: 'Naskah Keluar', path: '/naskah-keluar', icon: Send, roles: ['ketufor', 'waketufor', 'sekretaris'] },
-        { name: 'Disposisi', path: '/disposisi', icon: Share2, roles: ['ketufor', 'waketufor'] },
+        { name: 'Naskah Masuk', path: '/naskah-masuk', icon: Mail, roles: ['ketufor', 'waketufor', 'sekretaris', 'ketua_panitia'] },
+        { name: 'Naskah Keluar', path: '/naskah-keluar', icon: Send, roles: ['ketufor', 'waketufor', 'sekretaris', 'ketua_panitia'] },
+        { name: 'Disposisi', path: '/disposisi', icon: Share2, roles: ['ketufor', 'waketufor', 'ketua_panitia'] },
       ]
     },
     {

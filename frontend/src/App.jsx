@@ -92,22 +92,22 @@ export default function App() {
 
           {/* Naskah Masuk */}
           <Route path="naskah-masuk" element={
-            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris']}><NaskahMasukPage /></PrivateRoute>
+            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris', 'ketua_panitia']}><NaskahMasukPage /></PrivateRoute>
           } />
 
           {/* Naskah Keluar */}
           <Route path="naskah-keluar" element={
-            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris']}><NaskahKeluarPage /></PrivateRoute>
+            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris', 'ketua_panitia']}><NaskahKeluarPage /></PrivateRoute>
           } />
 
           {/* Naskah Detail (Handles both masuk and keluar details) */}
           <Route path="naskah/:id" element={
-            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris']}><NaskahDetailPage /></PrivateRoute>
+            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris', 'ketua_panitia']}><NaskahDetailPage /></PrivateRoute>
           } />
 
           {/* Disposisi */}
           <Route path="disposisi" element={
-            <PrivateRoute allowedRoles={['ketufor', 'waketufor']}><DisposisiListPage /></PrivateRoute>
+            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'ketua_panitia']}><DisposisiListPage /></PrivateRoute>
           } />
 
           {/* Kearsipan */}

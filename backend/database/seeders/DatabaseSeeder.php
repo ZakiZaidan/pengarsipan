@@ -39,7 +39,7 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('password123'),
             'peran' => 'sekretaris',
             'aktif' => true,
-            'nomor_wa' => '628953691677000',
+            'nomor_wa' => '62895369167700',
         ]);
 
         $sekretaris2 = User::create([

@@ -19,7 +19,7 @@ import {
   Clock,
   Download
 } from 'lucide-react';
-import { formatTanggal, STATUS_LABELS, STATUS_DISPOSISI_LABELS, confirmAlert } from '../../utils/helpers';
+import { formatTanggal, STATUS_LABELS, STATUS_DISPOSISI_LABELS, confirmAlert, openWhatsApp, waTemplateAjukan, waTemplateDisposisi, waTemplateDisetujui, waTemplateDitolak, waTemplateDitandatangani } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 
 export default function NaskahDetailPage() {
@@ -85,6 +85,13 @@ export default function NaskahDetailPage() {
       setActionLoading(true);
       await api.post(`/naskah/${id}/ajukan`);
       toast.success('Naskah berhasil diajukan untuk verifikasi!');
+      
+      // Redirect WA ke pimpinan
+      const pimpinanList = users.filter(u => u.peran === 'ketufor' || u.peran === 'waketufor');
+      if (pimpinanList.length > 0 && pimpinanList[0].nomor_wa) {
+        openWhatsApp(pimpinanList[0].nomor_wa, waTemplateAjukan(naskah?.perihal || ''));
+      }
+      
       fetchNaskah();
     } catch (err) {
       toast.error('Gagal mengajukan naskah');
@@ -147,7 +154,7 @@ export default function NaskahDetailPage() {
     if (!editorInstance) return;
     const ttdUrl = `http://localhost:8000/storage/${user.tanda_tangan_path}`;
     const label = signEditorMode === 'second' ? 'Penandatangan II' : 'Penandatangan I';
-    const html = `<div style="display: inline-block; text-align: center; margin: 15px 20px 0 0;"><img src="${ttdUrl}" alt="TTE ${label}" style="max-height: 100px; width: auto;" /><br/><span style="font-size: 11px; color: #64748b;">${label}:<br/><strong>${user.nama_lengkap}</strong></span></div>`;
+    const html = `<div style="display: inline-block; text-align: center; margin: 10px;"><img src="${ttdUrl}" alt="TTE ${label}" style="max-height: 120px; width: auto;" /><br/><span style="font-size: 10pt; color: #555;">${label}:<br/><strong>${user.nama_lengkap}</strong></span></div>`;
     editorInstance.insertContent(html);
   };
 
@@ -158,7 +165,7 @@ export default function NaskahDetailPage() {
       return;
     }
     const stempelUrl = `http://localhost:8000/storage/${user.stempel_path}`;
-    const html = `<div style="display: inline-block; margin: 10px 20px 0 0;"><img src="${stempelUrl}" alt="Stempel" style="max-height: 80px; width: auto; opacity: 0.9;" /></div>`;
+    const html = `<div style="display: inline-block; margin: 10px;"><img src="${stempelUrl}" alt="Stempel" style="max-height: 100px; width: auto;" /></div>`;
     editorInstance.insertContent(html);
   };
 
@@ -218,6 +225,13 @@ export default function NaskahDetailPage() {
         batas_waktu: batasWaktu
       });
       toast.success('Disposisi naskah berhasil dikirim!');
+      
+      // Redirect ke WhatsApp penerima
+      const penerima = users.find(u => u.id === kePengguna);
+      if (penerima?.nomor_wa) {
+        openWhatsApp(penerima.nomor_wa, waTemplateDisposisi(naskah?.perihal || '', instruksi));
+      }
+      
       setShowDisposisiModal(false);
       setKePengguna('');
       setInstruksi('');
@@ -649,6 +663,71 @@ export default function NaskahDetailPage() {
                   Selesai & Diarsipkan
                 </div>
               )}
+
+              {/* WhatsApp Redirect Buttons */}
+              {/* Sekretaris: WA ke pimpinan setelah ajukan atau saat menunggu */}
+              {user?.peran === 'sekretaris' && (nask.status === 'menunggu_verifikasi' || nask.status === 'disetujui' || nask.status === 'ditandatangani') && (
+                <div style={{ borderTop: '1px solid var(--slate-200)', paddingTop: '12px', marginTop: '8px' }}>
+                  <p style={{ fontSize: '11px', color: 'var(--slate-400)', marginBottom: '8px' }}>Kirim notifikasi via WhatsApp:</p>
+                  {users.filter(u => u.peran === 'ketufor' || u.peran === 'waketufor').map(pimpinan => (
+                    <button
+                      key={pimpinan.id}
+                      className="btn btn-ghost btn-sm"
+                      style={{ width: '100%', justifyContent: 'flex-start', gap: '8px', marginBottom: '4px', color: '#25D366' }}
+                      onClick={() => openWhatsApp(pimpinan.nomor_wa, waTemplateAjukan(nask.perihal))}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                      WA ke {pimpinan.nama_lengkap}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Pimpinan: WA ke pembuat setelah setujui/tolak/tandatangan */}
+              {isPimpinan && (nask.status === 'disetujui' || nask.status === 'ditolak' || nask.status === 'ditandatangani' || nask.status === 'terkirim' || nask.status === 'diarsipkan') && (
+                <div style={{ borderTop: '1px solid var(--slate-200)', paddingTop: '12px', marginTop: '8px' }}>
+                  <p style={{ fontSize: '11px', color: 'var(--slate-400)', marginBottom: '8px' }}>Kirim notifikasi via WhatsApp:</p>
+                  {/* WA ke pembuat (jika bukan diri sendiri) */}
+                  {nask.pembuat?.id !== user?.id && (
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      style={{ width: '100%', justifyContent: 'flex-start', gap: '8px', marginBottom: '4px', color: '#25D366' }}
+                      onClick={() => {
+                        const pembuat = users.find(u => u.id === nask.dibuat_oleh) || nask.pembuat;
+                        let pesan;
+                        if (nask.status === 'ditolak') {
+                          pesan = waTemplateDitolak(nask.perihal, nask.catatan_penolakan || '');
+                        } else if (nask.status === 'ditandatangani' || nask.status === 'terkirim' || nask.status === 'diarsipkan') {
+                          pesan = waTemplateDitandatangani(nask.perihal);
+                        } else {
+                          pesan = waTemplateDisetujui(nask.perihal);
+                        }
+                        openWhatsApp(pembuat?.nomor_wa, pesan);
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                      WA ke {nask.pembuat?.nama_lengkap || 'Pembuat'}
+                    </button>
+                  )}
+                  {/* WA ke semua sekretaris */}
+                  {users.filter(u => u.peran === 'sekretaris' && u.nomor_wa).map(sek => (
+                    <button
+                      key={sek.id}
+                      className="btn btn-ghost btn-sm"
+                      style={{ width: '100%', justifyContent: 'flex-start', gap: '8px', marginBottom: '4px', color: '#25D366' }}
+                      onClick={() => {
+                        const pesan = nask.status === 'ditandatangani' || nask.status === 'terkirim' || nask.status === 'diarsipkan'
+                          ? waTemplateDitandatangani(nask.perihal)
+                          : waTemplateDisetujui(nask.perihal);
+                        openWhatsApp(sek.nomor_wa, pesan);
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                      WA ke {sek.nama_lengkap}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -855,8 +934,25 @@ export default function NaskahDetailPage() {
                     'searchreplace', 'visualblocks', 'code', 'fullscreen',
                     'table', 'help', 'wordcount'
                   ],
-                  toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist | table | removeformat',
-                  content_style: 'body { font-family: "Times New Roman", serif; font-size: 12pt; line-height: 1.6; padding: 20px; }',
+                  toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist | table image | removeformat',
+                  content_style: `
+                    body { font-family: "Times New Roman", serif; font-size: 12pt; line-height: 1.6; padding: 20px; }
+                    img { cursor: move; max-width: 100%; }
+                    img.mce-selected { outline: 2px solid #3b82f6; }
+                  `,
+                  // Image flexibility settings
+                  image_advtab: true,
+                  image_caption: true,
+                  object_resizing: true,
+                  resize_img_proportional: true,
+                  image_dimensions: true,
+                  // Allow drag and drop images within editor
+                  paste_data_images: true,
+                  automatic_uploads: false,
+                  // Remove forced positioning constraints
+                  forced_root_block: 'div',
+                  valid_styles: { '*': 'text-align,margin,margin-top,margin-bottom,margin-left,margin-right,padding,float,display,width,height,max-width,max-height,position,top,left,right,bottom,opacity,inline-block' },
+                  extended_valid_elements: 'img[*],div[*],span[*],br',
                   branding: false,
                   promotion: false,
                 }}

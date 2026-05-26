@@ -45,6 +45,7 @@ export const PERAN_LABELS = {
   ketufor: 'Ketua Forum',
   waketufor: 'Wakil Ketua Forum',
   sekretaris: 'Sekretaris',
+  ketua_panitia: 'Ketua Panitia',
 };
 
 export const STATUS_RETENSI_LABELS = {
@@ -85,4 +86,63 @@ export const confirmAlert = async (title, text = '', confirmText = 'Ya', isDange
     reverseButtons: true,
   });
   return result.isConfirmed;
+};
+
+// --- WhatsApp Redirect Helper ---
+
+/**
+ * Format nomor WA ke format internasional (62xxx)
+ */
+const formatWaNumber = (nomor) => {
+  if (!nomor) return '';
+  let clean = nomor.replace(/[^0-9]/g, '');
+  if (clean.startsWith('0')) clean = '62' + clean.substring(1);
+  if (!clean.startsWith('62')) clean = '62' + clean;
+  return clean;
+};
+
+/**
+ * Buka WhatsApp dengan template pesan
+ * @param {string} nomor - Nomor WA tujuan
+ * @param {string} pesan - Template pesan
+ */
+export const openWhatsApp = (nomor, pesan) => {
+  const formattedNumber = formatWaNumber(nomor);
+  const encodedMessage = encodeURIComponent(pesan);
+  window.open(`https://wa.me/${formattedNumber}?text=${encodedMessage}`, '_blank');
+};
+
+/**
+ * Template WA: Sekretaris ajukan naskah ke pimpinan
+ */
+export const waTemplateAjukan = (perihal) => {
+  return `Assalamualaikum Kak, ada naskah baru yang perlu diverifikasi:\n\nPerihal: ${perihal || 'DIISI PERIHALNYA'}\n\nMohon dicek di sistem Arsip. Terima kasih.`;
+};
+
+/**
+ * Template WA: Pimpinan disposisi ke penerima
+ */
+export const waTemplateDisposisi = (perihal, instruksi) => {
+  return `Assalamualaikum, ada disposisi baru untuk kamu:\n\nPerihal: ${perihal || 'DIISI PERIHALNYA'}\nInstruksi: ${instruksi || 'DIISI INSTRUKSINYA'}\n\nMohon ditindaklanjuti. Terima kasih.`;
+};
+
+/**
+ * Template WA: Naskah disetujui
+ */
+export const waTemplateDisetujui = (perihal) => {
+  return `Assalamualaikum, naskah kamu telah disetujui.\n\nPerihal: ${perihal || 'DIISI PERIHALNYA'}\n\nSilakan cek di sistem Arsip. Terima kasih.`;
+};
+
+/**
+ * Template WA: Naskah ditolak
+ */
+export const waTemplateDitolak = (perihal, catatan) => {
+  return `Assalamualaikum, naskah kamu ditolak.\n\nPerihal: ${perihal || 'DIISI PERIHALNYA'}\nCatatan: ${catatan || 'DIISI CATATANNYA'}\n\nSilakan revisi dan ajukan kembali. Terima kasih.`;
+};
+
+/**
+ * Template WA: Naskah sudah ditandatangani
+ */
+export const waTemplateDitandatangani = (perihal) => {
+  return `Assalamualaikum, naskah berikut sudah ditandatangani.\n\nPerihal: ${perihal || 'DIISI PERIHALNYA'}\n\nSilakan cek di sistem Arsip untuk proses selanjutnya. Terima kasih.`;
 };
