@@ -51,7 +51,7 @@ export default function Sidebar() {
         { name: 'Draft Naskah', path: '/draft', icon: FileText, roles: ['ketufor', 'waketufor', 'sekretaris'] },
         { name: 'Naskah Masuk', path: '/naskah-masuk', icon: Mail, roles: ['ketufor', 'waketufor', 'sekretaris', 'ketua_panitia'] },
         { name: 'Naskah Keluar', path: '/naskah-keluar', icon: Send, roles: ['ketufor', 'waketufor', 'sekretaris', 'ketua_panitia'] },
-        { name: 'Disposisi', path: '/disposisi', icon: Share2, roles: ['ketufor', 'waketufor', 'ketua_panitia'] },
+        { name: 'Disposisi', path: '/disposisi', icon: Share2, roles: ['ketufor', 'waketufor', 'sekretaris', 'ketua_panitia'] },
       ]
     },
     {

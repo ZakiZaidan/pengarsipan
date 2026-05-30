@@ -31,6 +31,9 @@ export default function NaskahForm() {
           const draft = draftRes.data.data || draftRes.data;
           setPerihal(draft.perihal);
           setIsiNaskah(draft.isi_naskah);
+          if (draft.template_id) {
+            setSelectedTemplateId(draft.template_id);
+          }
         }
       } catch (err) {
         toast.error('Gagal memuat data pendukung');
@@ -83,8 +86,9 @@ export default function NaskahForm() {
       const payload = {
         perihal,
         isi_naskah: isiNaskah,
-        jenis: 'keluar', // Sekretaris creates naskah keluar
+        jenis: 'keluar',
         status: submitForVerification ? 'menunggu_verifikasi' : 'draft',
+        template_id: selectedTemplateId || null,
       };
 
       let res;

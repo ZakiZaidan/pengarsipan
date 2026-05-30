@@ -107,7 +107,7 @@ export default function App() {
 
           {/* Disposisi */}
           <Route path="disposisi" element={
-            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'ketua_panitia']}><DisposisiListPage /></PrivateRoute>
+            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris', 'ketua_panitia']}><DisposisiListPage /></PrivateRoute>
           } />
 
           {/* Kearsipan */}
