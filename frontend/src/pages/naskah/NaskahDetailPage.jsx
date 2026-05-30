@@ -296,18 +296,31 @@ export default function NaskahDetailPage() {
                       <FileText size={24} color="var(--primary-600)" />
                       <div>
                         <div style={{ fontSize: '13px', fontWeight: '600' }}>Berkas Lampiran Surat</div>
-                        <div style={{ fontSize: '11px', color: 'var(--slate-400)' }}>Format PDF</div>
+                        <div style={{ fontSize: '11px', color: 'var(--slate-400)' }}>Klik tombol untuk mengunduh</div>
                       </div>
                     </div>
-                    <a 
-                      href={`http://localhost:8000/storage/${nask.file_path}`} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
+                    <button
                       className="btn btn-secondary btn-sm"
                       style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                      onClick={async () => {
+                        try {
+                          const response = await api.get(`/naskah/${nask.id}/download-lampiran`, {
+                            responseType: 'blob',
+                          });
+                          const url = window.URL.createObjectURL(new Blob([response.data]));
+                          const a = document.createElement('a');
+                          a.href = url;
+                          const filename = nask.file_path.split('/').pop();
+                          a.download = filename;
+                          a.click();
+                          window.URL.revokeObjectURL(url);
+                        } catch (e) {
+                          toast.error('Gagal mengunduh berkas lampiran');
+                        }
+                      }}
                     >
                       <Download size={14} /> Unduh Berkas
-                    </a>
+                    </button>
                   </div>
                 )}
               </div>

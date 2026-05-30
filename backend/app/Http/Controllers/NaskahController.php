@@ -384,4 +384,19 @@ class NaskahController extends Controller
 
         return response()->json(['message' => 'Naskah berhasil diarsipkan']);
     }
+
+    public function downloadLampiran(string $id)
+    {
+        $naskah = Naskah::findOrFail($id);
+
+        if (!$naskah->file_path) {
+            return response()->json(['message' => 'Naskah ini tidak memiliki berkas lampiran'], 404);
+        }
+
+        if (!Storage::disk('local')->exists($naskah->file_path)) {
+            return response()->json(['message' => 'Berkas lampiran tidak ditemukan di server'], 404);
+        }
+
+        return Storage::disk('local')->download($naskah->file_path);
+    }
 }

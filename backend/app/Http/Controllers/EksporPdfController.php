@@ -58,6 +58,15 @@ class EksporPdfController extends Controller
 
         $namaOrganisasi = Pengaturan::getValue('nama_organisasi', 'Organisasi');
         $alamat = Pengaturan::getValue('alamat_organisasi', '');
+        $kopPath = Pengaturan::getValue('kop_path');
+
+        $kopDataUrl = null;
+        if ($kopPath && Storage::disk('public')->exists($kopPath)) {
+            $path = Storage::disk('public')->path($kopPath);
+            $type = pathinfo($path, PATHINFO_EXTENSION);
+            $imgData = file_get_contents($path);
+            $kopDataUrl = 'data:image/' . $type . ';base64,' . base64_encode($imgData);
+        }
 
         // Generate PDF
         $data = [
@@ -67,6 +76,7 @@ class EksporPdfController extends Controller
             'teks_watermark' => $teksWatermark,
             'nama_organisasi' => $namaOrganisasi,
             'alamat' => $alamat,
+            'kop_data_url' => $kopDataUrl,
         ];
 
         $paperSize = $ukuranKertas === 'F4' ? [0, 0, 612, 936] : 'A4';

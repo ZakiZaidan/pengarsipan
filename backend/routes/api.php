@@ -33,6 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/naskah/{id}/tandatangan', [NaskahController::class, 'tandatangan']);
     Route::post('/naskah/{id}/kirim', [NaskahController::class, 'kirim']);
     Route::post('/naskah/{id}/arsipkan', [NaskahController::class, 'arsipkan']);
+    Route::get('/naskah/{id}/download-lampiran', [NaskahController::class, 'downloadLampiran']);
 
     // Disposisi
     Route::apiResource('disposisi', DisposisiController::class)->only(['index', 'store', 'show']);

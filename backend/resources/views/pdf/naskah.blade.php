@@ -46,10 +46,16 @@
     @endif
 
     @if($dengan_kop)
-        <div class="kop">
-            <h2>{{ $nama_organisasi }}</h2>
-            <p>{{ $alamat }}</p>
-        </div>
+        @if(isset($kop_data_url) && $kop_data_url)
+            <div style="text-align: center; margin-bottom: 20px;">
+                <img src="{{ $kop_data_url }}" alt="Kop Surat" style="max-width: 100%; max-height: 150px;">
+            </div>
+        @else
+            <div class="kop">
+                <h2>{{ $nama_organisasi }}</h2>
+                <p>{{ $alamat }}</p>
+            </div>
+        @endif
     @endif
 
     <div class="content">

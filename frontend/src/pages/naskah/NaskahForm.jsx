@@ -48,7 +48,7 @@ export default function NaskahForm() {
 
     if (!templateId) return;
 
-    const tpl = templates.find(t => t.id === parseInt(templateId));
+    const tpl = templates.find(t => t.id === templateId);
     if (tpl) {
       // Confirm before replacing editor content
       if (isiNaskah) {
