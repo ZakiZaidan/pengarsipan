@@ -44,7 +44,7 @@ class PenggunaController extends Controller
             'nama_lengkap' => 'required|string|max:100',
             'email' => 'required|email|max:100|unique:users',
             'password' => 'required|string|min:8',
-            'peran' => 'required|in:ketufor,waketufor,sekretaris',
+            'peran' => 'required|in:ketufor,waketufor,sekretaris,ketua_panitia',
         ]);
 
         $validated['password'] = bcrypt($validated['password']);
@@ -79,7 +79,7 @@ class PenggunaController extends Controller
         $validated = $request->validate([
             'nama_lengkap' => 'sometimes|string|max:100',
             'email' => 'sometimes|email|max:100|unique:users,email,' . $pengguna->id,
-            'peran' => 'sometimes|in:ketufor,waketufor,sekretaris',
+            'peran' => 'sometimes|in:ketufor,waketufor,sekretaris,ketua_panitia',
             'aktif' => 'sometimes|boolean',
             'password' => 'nullable|string|min:8',
         ]);
@@ -101,7 +101,7 @@ class PenggunaController extends Controller
     public function listSemua(): JsonResponse
     {
         $pengguna = User::where('aktif', true)
-            ->select('id', 'nama_lengkap', 'peran')
+            ->select('id', 'nama_lengkap', 'peran', 'nomor_wa')
             ->orderBy('nama_lengkap')
             ->get();
 

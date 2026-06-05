@@ -81,33 +81,33 @@ export default function App() {
 
           {/* Draft Naskah */}
           <Route path="draft" element={
-            <PrivateRoute allowedRoles={['sekretaris']}><DraftNaskahPage /></PrivateRoute>
+            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris']}><DraftNaskahPage /></PrivateRoute>
           } />
           <Route path="draft/tambah" element={
-            <PrivateRoute allowedRoles={['sekretaris']}><NaskahForm /></PrivateRoute>
+            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris']}><NaskahForm /></PrivateRoute>
           } />
           <Route path="draft/edit/:id" element={
-            <PrivateRoute allowedRoles={['sekretaris']}><NaskahForm /></PrivateRoute>
+            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris']}><NaskahForm /></PrivateRoute>
           } />
 
           {/* Naskah Masuk */}
           <Route path="naskah-masuk" element={
-            <PrivateRoute allowedRoles={['ketufor', 'waketufor']}><NaskahMasukPage /></PrivateRoute>
+            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris', 'ketua_panitia']}><NaskahMasukPage /></PrivateRoute>
           } />
 
           {/* Naskah Keluar */}
           <Route path="naskah-keluar" element={
-            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris']}><NaskahKeluarPage /></PrivateRoute>
+            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris', 'ketua_panitia']}><NaskahKeluarPage /></PrivateRoute>
           } />
 
           {/* Naskah Detail (Handles both masuk and keluar details) */}
           <Route path="naskah/:id" element={
-            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris']}><NaskahDetailPage /></PrivateRoute>
+            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris', 'ketua_panitia']}><NaskahDetailPage /></PrivateRoute>
           } />
 
           {/* Disposisi */}
           <Route path="disposisi" element={
-            <PrivateRoute allowedRoles={['ketufor', 'waketufor']}><DisposisiListPage /></PrivateRoute>
+            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris', 'ketua_panitia']}><DisposisiListPage /></PrivateRoute>
           } />
 
           {/* Kearsipan */}

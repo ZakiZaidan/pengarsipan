@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Disposisi;
 use App\Models\Naskah;
+use App\Models\User;
 use App\Services\ActivityLogService;
 use App\Services\NotifikasiService;
+use App\Services\WhatsAppService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -75,6 +77,28 @@ class DisposisiController extends Controller
             'DISPOSISI_BARU',
             $disposisi->id
         );
+
+        // Kirim notifikasi WhatsApp ke penerima disposisi
+        $penerima = User::find($validated['ke_pengguna']);
+        if ($penerima) {
+            WhatsAppService::notifDisposisi(
+                $penerima,
+                $user->nama_lengkap,
+                $naskah?->perihal ?? '-',
+                $validated['instruksi']
+            );
+        }
+
+        // Auto-inject stempel jika pengirim memiliki stempel
+        if ($user->stempel_path && $naskah) {
+            $stempelUrl = asset('storage/' . $user->stempel_path);
+            $stempelHtml = '<div style="margin-top: 10px;"><img src="' . $stempelUrl . '" alt="Stempel" style="max-height: 80px; width: auto; opacity: 0.9;" /></div>';
+            
+            $isiNaskah = $naskah->isi_naskah ?? '';
+            if (!str_contains($isiNaskah, 'alt="Stempel"')) {
+                $naskah->update(['isi_naskah' => $isiNaskah . $stempelHtml]);
+            }
+        }
 
         return response()->json([
             'message' => 'Disposisi berhasil dibuat',

@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('nama_lengkap', 100);
             $table->string('email', 100)->unique();
             $table->string('password');
-            $table->enum('peran', ['ketufor', 'waketufor', 'sekretaris'])->default('sekretaris');
+            $table->enum('peran', ['ketufor', 'waketufor', 'sekretaris', 'ketua_panitia'])->default('sekretaris');
             $table->boolean('aktif')->default(true);
             $table->text('tanda_tangan_path')->nullable();
             $table->timestamp('terakhir_login')->nullable();

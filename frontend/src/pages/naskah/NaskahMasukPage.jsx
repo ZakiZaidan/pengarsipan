@@ -48,6 +48,10 @@ export default function NaskahMasukPage() {
       toast.error('Kolom Perihal dan Pengirim wajib diisi');
       return;
     }
+    if (!nomorSuratAsal || !tanggalSuratAsal || !tanggalTerima || !lampiran) {
+      toast.error('Semua kolom wajib diisi termasuk lampiran PDF');
+      return;
+    }
 
     try {
       setSubmitting(true);
@@ -225,43 +229,47 @@ export default function NaskahMasukPage() {
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label className="form-label">Nomor Surat Asal</label>
+                    <label className="form-label">Nomor Surat Asal <span className="required">*</span></label>
                     <input 
                       type="text" 
                       className="form-control" 
                       placeholder="Contoh: 023/PCM/V/2026"
                       value={nomorSuratAsal}
                       onChange={(e) => setNomorSuratAsal(e.target.value)}
+                      required
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Tanggal Surat Asal</label>
+                    <label className="form-label">Tanggal Surat Asal <span className="required">*</span></label>
                     <input 
                       type="date" 
                       className="form-control" 
                       value={tanggalSuratAsal}
                       onChange={(e) => setTanggalSuratAsal(e.target.value)}
+                      required
                     />
                   </div>
                 </div>
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label className="form-label">Tanggal Diterima</label>
+                    <label className="form-label">Tanggal Diterima <span className="required">*</span></label>
                     <input 
                       type="date" 
                       className="form-control" 
                       value={tanggalTerima}
                       onChange={(e) => setTanggalTerima(e.target.value)}
+                      required
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Upload Berkas Lampiran (PDF)</label>
+                    <label className="form-label">Upload Berkas Lampiran (PDF) <span className="required">*</span></label>
                     <input 
                       type="file" 
                       className="form-control" 
                       accept="application/pdf"
                       onChange={handleFileChange}
+                      required
                     />
                   </div>
                 </div>

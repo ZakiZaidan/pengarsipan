@@ -14,29 +14,42 @@ class DatabaseSeeder extends Seeder
         // --- Buat Pengguna Default ---
         $ketufor = User::create([
             'username' => 'ketufor',
-            'nama_lengkap' => 'Ahmad Ketufor',
+            'nama_lengkap' => 'Royan',
             'email' => 'ketufor@organisasi.id',
             'password' => bcrypt('password123'),
             'peran' => 'ketufor',
             'aktif' => true,
+            'nomor_wa' => '6287888803983',
         ]);
 
         $waketufor = User::create([
             'username' => 'waketufor',
-            'nama_lengkap' => 'Budi Waketufor',
+            'nama_lengkap' => 'Fahmi',
             'email' => 'waketufor@organisasi.id',
             'password' => bcrypt('password123'),
             'peran' => 'waketufor',
             'aktif' => true,
+            'nomor_wa' => '6285704359736',
         ]);
 
         $sekretaris = User::create([
             'username' => 'sekretaris',
-            'nama_lengkap' => 'Citra Sekretaris',
+            'nama_lengkap' => 'Mirza Sabrina',
             'email' => 'sekretaris@organisasi.id',
             'password' => bcrypt('password123'),
             'peran' => 'sekretaris',
             'aktif' => true,
+            'nomor_wa' => '62895369167700',
+        ]);
+
+        $sekretaris2 = User::create([
+            'username' => 'sekretaris2',
+            'nama_lengkap' => 'Siti Fadillah',
+            'email' => 'sekretaris2@organisasi.id',
+            'password' => bcrypt('password123'),
+            'peran' => 'sekretaris',
+            'aktif' => true,
+            'nomor_wa' => '6287819093143',
         ]);
 
         // --- Buat Template Naskah Default ---

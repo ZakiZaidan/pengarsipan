@@ -19,7 +19,7 @@ import {
 
 export default function Sidebar() {
   const { user, logout } = useAuthStore();
-  const { count: unreadCount } = useNotifikasiStore();
+  const { count: unreadCount, countDisposisi, countNaskahKeluar, countNaskahMasuk } = useNotifikasiStore();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -37,6 +37,7 @@ export default function Sidebar() {
       case 'ketufor': return 'Ketua Formatur';
       case 'waketufor': return 'Wakil Ketua Formatur';
       case 'sekretaris': return 'Sekretaris';
+      case 'ketua_panitia': return 'Ketua Panitia';
       default: return role;
     }
   };
@@ -46,11 +47,11 @@ export default function Sidebar() {
     {
       title: 'Menu Utama',
       items: [
-        { name: 'Dashboard', path: '/', icon: LayoutDashboard, roles: ['ketufor', 'waketufor', 'sekretaris'] },
-        { name: 'Draft Naskah', path: '/draft', icon: FileText, roles: ['sekretaris'] },
-        { name: 'Naskah Masuk', path: '/naskah-masuk', icon: Mail, roles: ['ketufor', 'waketufor'] },
-        { name: 'Naskah Keluar', path: '/naskah-keluar', icon: Send, roles: ['ketufor', 'waketufor', 'sekretaris'] },
-        { name: 'Disposisi', path: '/disposisi', icon: Share2, roles: ['ketufor', 'waketufor'] },
+        { name: 'Dashboard', path: '/', icon: LayoutDashboard, roles: ['ketufor', 'waketufor', 'sekretaris', 'ketua_panitia'] },
+        { name: 'Draft Naskah', path: '/draft', icon: FileText, roles: ['ketufor', 'waketufor', 'sekretaris'] },
+        { name: 'Naskah Masuk', path: '/naskah-masuk', icon: Mail, roles: ['ketufor', 'waketufor', 'sekretaris', 'ketua_panitia'] },
+        { name: 'Naskah Keluar', path: '/naskah-keluar', icon: Send, roles: ['ketufor', 'waketufor', 'sekretaris', 'ketua_panitia'] },
+        { name: 'Disposisi', path: '/disposisi', icon: Share2, roles: ['ketufor', 'waketufor', 'sekretaris', 'ketua_panitia'] },
       ]
     },
     {
@@ -74,10 +75,10 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <div className="sidebar-logo">SP</div>
+        <img src="/logo forum.png" alt="Logo Forum" style={{ width: '48px', height: '48px', objectFit: 'contain', borderRadius: '50%' }} />
         <div>
           <h1 className="sidebar-title">Sistem Arsip</h1>
-          <p className="sidebar-subtitle">Versi 1.0</p>
+          <p className="sidebar-subtitle">Forum Anak Muda</p>
         </div>
       </div>
 
@@ -98,8 +99,14 @@ export default function Sidebar() {
                 >
                   <item.icon className="nav-icon" />
                   <span>{item.name}</span>
-                  {item.name === 'Disposisi' && unreadCount > 0 && (
-                    <span className="nav-badge">{unreadCount}</span>
+                  {item.name === 'Disposisi' && countDisposisi > 0 && (
+                    <span className="nav-badge">{countDisposisi}</span>
+                  )}
+                  {item.name === 'Naskah Keluar' && countNaskahKeluar > 0 && (
+                    <span className="nav-badge">{countNaskahKeluar}</span>
+                  )}
+                  {item.name === 'Naskah Masuk' && countNaskahMasuk > 0 && (
+                    <span className="nav-badge">{countNaskahMasuk}</span>
                   )}
                 </NavLink>
               ))}

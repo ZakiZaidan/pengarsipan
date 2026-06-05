@@ -16,9 +16,12 @@ export default function NaskahKeluarPage() {
   const fetchNaskahs = async () => {
     try {
       setLoading(true);
-      // Naskah keluar includes everything that's not a draft and not incoming
+      // Naskah keluar: hanya yang sudah diajukan ke atas (bukan draft murni)
       const res = await api.get(`/naskah?jenis=keluar&status=${statusFilter}&cari=${search}`);
-      setNaskahs(res.data.data || res.data || []);
+      const allNaskah = res.data.data || res.data || [];
+      // Exclude draft yang belum diajukan — itu ditampilkan di halaman Draft Naskah
+      const filtered = statusFilter ? allNaskah : allNaskah.filter(n => n.status !== 'draft' && n.status !== 'ditolak');
+      setNaskahs(filtered);
     } catch (err) {
       toast.error('Gagal mengambil daftar naskah keluar');
     } finally {

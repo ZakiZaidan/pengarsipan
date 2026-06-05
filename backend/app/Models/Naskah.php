@@ -29,6 +29,7 @@ class Naskah extends Model
         'pengirim',
         'dibuat_oleh',
         'disetujui_oleh',
+        'ditandatangani_oleh_2',
         'template_id',
         'tanggal_naskah',
     ];
@@ -76,6 +77,11 @@ class Naskah extends Model
     public function penyetuju(): BelongsTo
     {
         return $this->belongsTo(User::class, 'disetujui_oleh');
+    }
+
+    public function penandatanganKedua(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'ditandatangani_oleh_2');
     }
 
     public function template(): BelongsTo

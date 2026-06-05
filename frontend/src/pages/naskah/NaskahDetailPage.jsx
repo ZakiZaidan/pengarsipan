@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Editor } from '@tinymce/tinymce-react';
 import api from '../../services/api';
 import useAuthStore from '../../stores/authStore';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
@@ -18,7 +19,7 @@ import {
   Clock,
   Download
 } from 'lucide-react';
-import { formatTanggal, STATUS_LABELS, STATUS_DISPOSISI_LABELS, confirmAlert } from '../../utils/helpers';
+import { formatTanggal, STATUS_LABELS, STATUS_DISPOSISI_LABELS, confirmAlert, openWhatsApp, waTemplateAjukan, waTemplateDisposisi, waTemplateDisetujui, waTemplateDitolak, waTemplateDitandatangani } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 
 export default function NaskahDetailPage() {
@@ -29,6 +30,7 @@ export default function NaskahDetailPage() {
   const [naskah, setNaskah] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const editorRef = useRef(null);
 
   // Users list for disposisi dropdown
   const [users, setUsers] = useState([]);
@@ -125,16 +127,62 @@ export default function NaskahDetailPage() {
     }
   };
 
-  const handleTandaTangan = async () => {
-    const isConfirmed = await confirmAlert('Tandatangani Naskah?', 'Tandatangani naskah dinas ini secara digital?', 'Tandatangani');
-    if (!isConfirmed) return;
+  // State for signature editor modal
+  const [showSignEditor, setShowSignEditor] = useState(false);
+  const [signEditorContent, setSignEditorContent] = useState('');
+  const [signEditorMode, setSignEditorMode] = useState('first'); // 'first' | 'second'
+
+  const handleTandaTangan = async (isSecond = false) => {
+    if (!user?.tanda_tangan_path) {
+      toast.error('Silakan unggah Tanda Tangan Anda di menu Profil terlebih dahulu!');
+      return;
+    }
+    // Open editor modal with current naskah content
+    setSignEditorContent(naskah?.isi_naskah || '');
+    setSignEditorMode(isSecond ? 'second' : 'first');
+    setShowSignEditor(true);
+  };
+
+  const handleInsertSignature = (editorInstance) => {
+    if (!editorInstance) return;
+    const ttdUrl = `http://localhost:8000/storage/${user.tanda_tangan_path}`;
+    const label = signEditorMode === 'second' ? 'Penandatangan II' : 'Penandatangan I';
+    const html = `<div style="display: inline-block; text-align: center; margin: 10px;"><img src="${ttdUrl}" alt="TTE ${label}" style="max-height: 120px; width: auto;" /><br/><span style="font-size: 10pt; color: #555;">${label}:<br/><strong>${user.nama_lengkap}</strong></span></div>`;
+    editorInstance.insertContent(html);
+  };
+
+  const handleInsertStempel = (editorInstance) => {
+    if (!editorInstance) return;
+    if (!user?.stempel_path) {
+      toast.error('Anda belum mengupload stempel di Profil');
+      return;
+    }
+    const stempelUrl = `http://localhost:8000/storage/${user.stempel_path}`;
+    const html = `<div style="display: inline-block; margin: 10px;"><img src="${stempelUrl}" alt="Stempel" style="max-height: 100px; width: auto;" /></div>`;
+    editorInstance.insertContent(html);
+  };
+
+  const handleInsertAlignedBlock = (editorInstance, position) => {
+    if (!editorInstance) return;
+    const align = position === 'left' ? 'left' : position === 'right' ? 'right' : 'center';
+    editorInstance.insertContent(`<div style="text-align: ${align}; margin-top: 30px;">&nbsp;</div>`);
+    // Move cursor inside the div
+    editorInstance.selection.select(editorInstance.selection.getNode());
+    editorInstance.selection.collapse(false);
+  };
+
+  const handleSaveSignEditor = async () => {
     try {
       setActionLoading(true);
-      await api.post(`/naskah/${id}/tandatangan`);
-      toast.success('Naskah dinas berhasil ditandatangani!');
+      await api.post(`/naskah/${id}/tandatangan`, { 
+        sebagai_penandatangan_kedua: signEditorMode === 'second',
+        isi_naskah_custom: signEditorContent,
+      });
+      toast.success(signEditorMode === 'second' ? 'Tanda tangan kedua berhasil!' : 'Naskah berhasil ditandatangani!');
+      setShowSignEditor(false);
       fetchNaskah();
     } catch (err) {
-      toast.error('Gagal menandatangani naskah');
+      toast.error(err.response?.data?.message || 'Gagal menandatangani naskah');
     } finally {
       setActionLoading(false);
     }
@@ -170,6 +218,7 @@ export default function NaskahDetailPage() {
         batas_waktu: batasWaktu
       });
       toast.success('Disposisi naskah berhasil dikirim!');
+      
       setShowDisposisiModal(false);
       setKePengguna('');
       setInstruksi('');
@@ -304,18 +353,17 @@ export default function NaskahDetailPage() {
                       style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
                       onClick={async () => {
                         try {
-                          const response = await api.get(`/naskah/${nask.id}/download-lampiran`, {
-                            responseType: 'blob',
-                          });
-                          const url = window.URL.createObjectURL(new Blob([response.data]));
-                          const a = document.createElement('a');
-                          a.href = url;
-                          const filename = nask.file_path.split('/').pop();
-                          a.download = filename;
-                          a.click();
+                          const res = await api.get(`/naskah/${nask.id}/lampiran`, { responseType: 'blob' });
+                          const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+                          const link = document.createElement('a');
+                          link.href = url;
+                          link.setAttribute('download', `lampiran_${nask.perihal || nask.id}.pdf`);
+                          document.body.appendChild(link);
+                          link.click();
+                          link.remove();
                           window.URL.revokeObjectURL(url);
-                        } catch (e) {
-                          toast.error('Gagal mengunduh berkas lampiran');
+                        } catch (err) {
+                          toast.error('Gagal mengunduh lampiran');
                         }
                       }}
                     >
@@ -480,6 +528,34 @@ export default function NaskahDetailPage() {
               {/* Pimpinan actions */}
               {isPimpinan && (
                 <>
+                  {/* Pimpinan yang buat draft sendiri — bisa langsung TTD + stempel tanpa ajukan */}
+                  {isPembuat && (nask.status === 'draft' || nask.status === 'ditolak') && (
+                    <>
+                      <button 
+                        className="btn btn-primary" 
+                        style={{ width: '100%' }}
+                        onClick={() => navigate(`/draft/edit/${id}`)}
+                        disabled={actionLoading}
+                      >
+                        Edit Draft
+                      </button>
+                      <button 
+                        className={`btn ${user?.tanda_tangan_path ? 'btn-success' : 'btn-secondary'}`}
+                        style={{ width: '100%', opacity: user?.tanda_tangan_path ? 1 : 0.7 }}
+                        onClick={() => {
+                          if (!user?.tanda_tangan_path) {
+                            toast.error('Silakan unggah Tanda Tangan Anda di menu Profil terlebih dahulu!');
+                            return;
+                          }
+                          handleTandaTangan();
+                        }}
+                        disabled={actionLoading}
+                      >
+                        {user?.tanda_tangan_path ? '📝 Tandatangani & Stempel' : 'Tanda Tangan Belum Diatur'}
+                      </button>
+                    </>
+                  )}
+
                   {nask.status === 'menunggu_verifikasi' && (
                     <>
                       <button 
@@ -519,14 +595,29 @@ export default function NaskahDetailPage() {
                   )}
 
                   {nask.status === 'ditandatangani' && (
-                    <button 
-                      className="btn btn-success" 
-                      style={{ width: '100%' }}
-                      onClick={handleKirim}
-                      disabled={actionLoading}
-                    >
-                      Kirim & Arsipkan
-                    </button>
+                    <>
+                      {/* Tombol tanda tangan kedua — muncul untuk pimpinan yang punya TTD dan naskah belum punya TTD kedua */}
+                      {user?.tanda_tangan_path && !nask.ditandatangani_oleh_2 && (user?.peran === 'ketufor' || user?.peran === 'waketufor') && (
+                        <button 
+                          className="btn btn-secondary" 
+                          style={{ width: '100%', marginBottom: '8px' }}
+                          onClick={() => handleTandaTangan(true)}
+                          disabled={actionLoading}
+                        >
+                          + Tanda Tangan Kedua
+                        </button>
+                      )}
+                      {(user?.peran === 'ketufor' || user?.peran === 'waketufor') && (
+                        <button 
+                          className="btn btn-success" 
+                          style={{ width: '100%' }}
+                          onClick={handleKirim}
+                          disabled={actionLoading}
+                        >
+                          Kirim & Arsipkan
+                        </button>
+                      )}
+                    </>
                   )}
 
                   {nask.jenis === 'masuk' && (
@@ -557,6 +648,71 @@ export default function NaskahDetailPage() {
               {nask.status === 'diarsipkan' && (
                 <div style={{ textAlign: 'center', color: 'var(--success-600)', fontSize: '13px', fontWeight: '600', padding: '10px', background: 'var(--success-50)', borderRadius: 'var(--radius)' }}>
                   Selesai & Diarsipkan
+                </div>
+              )}
+
+              {/* WhatsApp Redirect Buttons */}
+              {/* Sekretaris: WA ke pimpinan setelah ajukan atau saat menunggu */}
+              {user?.peran === 'sekretaris' && (nask.status === 'menunggu_verifikasi' || nask.status === 'disetujui' || nask.status === 'ditandatangani') && (
+                <div style={{ borderTop: '1px solid var(--slate-200)', paddingTop: '12px', marginTop: '8px' }}>
+                  <p style={{ fontSize: '11px', color: 'var(--slate-400)', marginBottom: '8px' }}>Kirim notifikasi via WhatsApp:</p>
+                  {users.filter(u => u.peran === 'ketufor' || u.peran === 'waketufor').map(pimpinan => (
+                    <button
+                      key={pimpinan.id}
+                      className="btn btn-ghost btn-sm"
+                      style={{ width: '100%', justifyContent: 'flex-start', gap: '8px', marginBottom: '4px', color: '#25D366' }}
+                      onClick={() => openWhatsApp(pimpinan.nomor_wa, waTemplateAjukan(nask.perihal))}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                      WA ke {pimpinan.nama_lengkap}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Pimpinan: WA ke pembuat setelah setujui/tolak/tandatangan */}
+              {isPimpinan && (nask.status === 'disetujui' || nask.status === 'ditolak' || nask.status === 'ditandatangani' || nask.status === 'terkirim' || nask.status === 'diarsipkan') && (
+                <div style={{ borderTop: '1px solid var(--slate-200)', paddingTop: '12px', marginTop: '8px' }}>
+                  <p style={{ fontSize: '11px', color: 'var(--slate-400)', marginBottom: '8px' }}>Kirim notifikasi via WhatsApp:</p>
+                  {/* WA ke pembuat (jika bukan diri sendiri) */}
+                  {nask.pembuat?.id !== user?.id && (
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      style={{ width: '100%', justifyContent: 'flex-start', gap: '8px', marginBottom: '4px', color: '#25D366' }}
+                      onClick={() => {
+                        const pembuat = users.find(u => u.id === nask.dibuat_oleh) || nask.pembuat;
+                        let pesan;
+                        if (nask.status === 'ditolak') {
+                          pesan = waTemplateDitolak(nask.perihal, nask.catatan_penolakan || '');
+                        } else if (nask.status === 'ditandatangani' || nask.status === 'terkirim' || nask.status === 'diarsipkan') {
+                          pesan = waTemplateDitandatangani(nask.perihal);
+                        } else {
+                          pesan = waTemplateDisetujui(nask.perihal);
+                        }
+                        openWhatsApp(pembuat?.nomor_wa, pesan);
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                      WA ke {nask.pembuat?.nama_lengkap || 'Pembuat'}
+                    </button>
+                  )}
+                  {/* WA ke semua sekretaris */}
+                  {users.filter(u => u.peran === 'sekretaris' && u.nomor_wa).map(sek => (
+                    <button
+                      key={sek.id}
+                      className="btn btn-ghost btn-sm"
+                      style={{ width: '100%', justifyContent: 'flex-start', gap: '8px', marginBottom: '4px', color: '#25D366' }}
+                      onClick={() => {
+                        const pesan = nask.status === 'ditandatangani' || nask.status === 'terkirim' || nask.status === 'diarsipkan'
+                          ? waTemplateDitandatangani(nask.perihal)
+                          : waTemplateDisetujui(nask.perihal);
+                        openWhatsApp(sek.nomor_wa, pesan);
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                      WA ke {sek.nama_lengkap}
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
@@ -643,9 +799,30 @@ export default function NaskahDetailPage() {
                   />
                 </div>
               </div>
-              <div className="card-footer" style={{ padding: '16px 24px', display: 'flex', justifyContent: 'flex-end', gap: '12px', background: 'var(--slate-50)', borderTop: '1px solid var(--slate-200)' }}>
-                <button type="button" className="btn btn-secondary" onClick={() => setShowDisposisiModal(false)}>Batal</button>
-                <button type="submit" className="btn btn-primary">Kirim Disposisi</button>
+              <div className="card-footer" style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: '12px', background: 'var(--slate-50)', borderTop: '1px solid var(--slate-200)' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowDisposisiModal(false)}>Batal</button>
+                  <button type="submit" className="btn btn-primary">Kirim Disposisi</button>
+                </div>
+                {/* Tombol WA ke penerima disposisi */}
+                {kePengguna && (
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    style={{ width: '100%', justifyContent: 'center', gap: '8px', color: '#25D366' }}
+                    onClick={() => {
+                      const penerima = users.find(u => u.id === kePengguna);
+                      if (penerima?.nomor_wa) {
+                        openWhatsApp(penerima.nomor_wa, waTemplateDisposisi(naskah?.perihal || '', instruksi || 'DIISI INSTRUKSINYA'));
+                      } else {
+                        toast.error('Nomor WA penerima belum diatur');
+                      }
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                    WA ke {users.find(u => u.id === kePengguna)?.nama_lengkap || 'Penerima'}
+                  </button>
+                )}
               </div>
             </form>
           </div>
@@ -690,6 +867,116 @@ export default function NaskahDetailPage() {
                 <button type="submit" className="btn btn-primary">Arsip Dokumen</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Signature Editor Modal */}
+      {showSignEditor && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '20px' }}>
+          <div className="card" style={{ width: '100%', maxWidth: '900px', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+            <div className="card-header" style={{ flexShrink: 0 }}>
+              <h3 className="card-title">
+                {signEditorMode === 'second' ? 'Tambah Tanda Tangan Kedua' : 'Tandatangani Naskah'}
+              </h3>
+              <button className="btn btn-ghost btn-sm" onClick={() => setShowSignEditor(false)}>&times;</button>
+            </div>
+            <div className="card-body" style={{ flex: 1, overflow: 'auto', padding: '16px 24px' }}>
+              <p style={{ fontSize: '13px', color: 'var(--slate-500)', marginBottom: '12px' }}>
+                Posisikan kursor di tempat yang diinginkan, lalu klik tombol untuk menyisipkan. Gunakan tombol posisi untuk mengatur rata kiri/tengah/kanan.
+              </p>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                <button 
+                  type="button" 
+                  className="btn btn-primary btn-sm"
+                  onClick={() => handleInsertSignature(editorRef.current)}
+                >
+                  📝 Sisipkan Tanda Tangan
+                </button>
+                {user?.stempel_path && (
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => handleInsertStempel(editorRef.current)}
+                  >
+                    🔏 Sisipkan Stempel
+                  </button>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                <button 
+                  type="button" 
+                  className="btn btn-ghost btn-sm"
+                  style={{ fontSize: '11px' }}
+                  onClick={() => handleInsertAlignedBlock(editorRef.current, 'left')}
+                >
+                  ⬅ Posisi Kiri Bawah
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-ghost btn-sm"
+                  style={{ fontSize: '11px' }}
+                  onClick={() => handleInsertAlignedBlock(editorRef.current, 'center')}
+                >
+                  ⬇ Posisi Tengah Bawah
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-ghost btn-sm"
+                  style={{ fontSize: '11px' }}
+                  onClick={() => handleInsertAlignedBlock(editorRef.current, 'right')}
+                >
+                  ➡ Posisi Kanan Bawah
+                </button>
+              </div>
+              <Editor
+                apiKey="ern0cy0zzrd7z1v1xf7y0glwofutjfdq8ptz9z7y9btlv2rk"
+                onInit={(evt, editor) => { editorRef.current = editor; }}
+                value={signEditorContent}
+                onEditorChange={(content) => setSignEditorContent(content)}
+                init={{
+                  height: 450,
+                  menubar: 'edit view insert format',
+                  plugins: [
+                    'advlist', 'autolink', 'lists', 'link', 'image',
+                    'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                    'table', 'help', 'wordcount'
+                  ],
+                  toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist | table image | removeformat',
+                  content_style: `
+                    body { font-family: "Times New Roman", serif; font-size: 12pt; line-height: 1.6; padding: 20px; }
+                    img { cursor: move; max-width: 100%; }
+                    img.mce-selected { outline: 2px solid #3b82f6; }
+                  `,
+                  // Image flexibility settings
+                  image_advtab: true,
+                  image_caption: true,
+                  object_resizing: true,
+                  resize_img_proportional: true,
+                  image_dimensions: true,
+                  // Allow drag and drop images within editor
+                  paste_data_images: true,
+                  automatic_uploads: false,
+                  // Remove forced positioning constraints
+                  forced_root_block: 'div',
+                  valid_styles: { '*': 'text-align,margin,margin-top,margin-bottom,margin-left,margin-right,padding,float,display,width,height,max-width,max-height,position,top,left,right,bottom,opacity,inline-block' },
+                  extended_valid_elements: 'img[*],div[*],span[*],br',
+                  branding: false,
+                  promotion: false,
+                }}
+              />
+            </div>
+            <div className="card-footer" style={{ padding: '16px 24px', display: 'flex', justifyContent: 'flex-end', gap: '12px', background: 'var(--slate-50)', borderTop: '1px solid var(--slate-200)', flexShrink: 0 }}>
+              <button type="button" className="btn btn-secondary" onClick={() => setShowSignEditor(false)}>Batal</button>
+              <button 
+                type="button" 
+                className="btn btn-primary" 
+                onClick={handleSaveSignEditor}
+                disabled={actionLoading}
+              >
+                {actionLoading ? 'Menyimpan...' : 'Simpan & Tandatangani'}
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -22,6 +22,8 @@ class User extends Authenticatable
         'peran',
         'aktif',
         'tanda_tangan_path',
+        'nomor_wa',
+        'stempel_path',
     ];
 
     protected $hidden = [
@@ -59,6 +61,11 @@ class User extends Authenticatable
     public function isPimpinan(): bool
     {
         return $this->isKetufor() || $this->isWaketufor();
+    }
+
+    public function isKetuaPanitia(): bool
+    {
+        return $this->peran === PeranEnum::KETUA_PANITIA;
     }
 
     // --- Relationships ---
