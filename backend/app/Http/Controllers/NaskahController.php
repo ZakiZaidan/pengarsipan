@@ -101,22 +101,6 @@ class NaskahController extends Controller
         ], 201);
     }
 
-    public function downloadLampiran(string $id)
-    {
-        $naskah = Naskah::findOrFail($id);
-
-        if (!$naskah->file_path) {
-            return response()->json(['message' => 'Naskah tidak memiliki lampiran'], 404);
-        }
-
-        $fullPath = Storage::disk('local')->path($naskah->file_path);
-
-        if (!file_exists($fullPath)) {
-            return response()->json(['message' => 'File lampiran tidak ditemukan'], 404);
-        }
-
-        return response()->download($fullPath);
-    }
     public function show(string $id): JsonResponse
     {
         $naskah = Naskah::with([

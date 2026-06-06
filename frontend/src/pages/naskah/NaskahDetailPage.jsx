@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Editor } from '@tinymce/tinymce-react';
+import JoditEditor from 'jodit-react';
 import api from '../../services/api';
 import useAuthStore from '../../stores/authStore';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
@@ -132,6 +132,37 @@ export default function NaskahDetailPage() {
   const [signEditorContent, setSignEditorContent] = useState('');
   const [signEditorMode, setSignEditorMode] = useState('first'); // 'first' | 'second'
 
+  // Jodit config untuk modal tanda tangan — harus di top-level (Rules of Hooks)
+  const joditSignConfig = useMemo(() => ({
+    height: 450,
+    toolbar: true,
+    buttons: [
+      'undo', 'redo', '|',
+      'bold', 'italic', 'underline', '|',
+      'align', '|',
+      'ul', 'ol', '|',
+      'table', 'image', '|',
+      'eraser',
+    ],
+    style: { font: '12pt "Times New Roman", Times, serif' },
+    extraCss: `
+      .jodit-wysiwyg {
+        font-family: "Times New Roman", Times, serif !important;
+        font-size: 12pt !important;
+        line-height: 1.6 !important;
+        padding: 24px !important;
+      }
+    `,
+    uploader: { insertImageAsBase64URI: true },
+    showWordsCounter: false,
+    showCharsCounter: false,
+    showXPathInStatusbar: false,
+    askBeforePasteHTML: false,
+    askBeforePasteFromWord: false,
+    processPasteHTML: true,
+    processPasteFromWord: true,
+  }), []);
+
   const handleTandaTangan = async (isSecond = false) => {
     if (!user?.tanda_tangan_path) {
       toast.error('Silakan unggah Tanda Tangan Anda di menu Profil terlebih dahulu!');
@@ -143,32 +174,41 @@ export default function NaskahDetailPage() {
     setShowSignEditor(true);
   };
 
-  const handleInsertSignature = (editorInstance) => {
-    if (!editorInstance) return;
-    const ttdUrl = `http://localhost:8000/storage/${user.tanda_tangan_path}`;
-    const label = signEditorMode === 'second' ? 'Penandatangan II' : 'Penandatangan I';
-    const html = `<div style="display: inline-block; text-align: center; margin: 10px;"><img src="${ttdUrl}" alt="TTE ${label}" style="max-height: 120px; width: auto;" /><br/><span style="font-size: 10pt; color: #555;">${label}:<br/><strong>${user.nama_lengkap}</strong></span></div>`;
-    editorInstance.insertContent(html);
+  // Jodit: insert HTML ke posisi kursor menggunakan execCommand
+  const insertHtmlToJodit = (html) => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    // Jodit menyediakan execCommand untuk insert HTML di posisi kursor
+    if (editor.selection) {
+      editor.selection.insertHTML(html);
+    } else {
+      // Fallback: append ke konten
+      setSignEditorContent(prev => (prev || '') + html);
+    }
   };
 
-  const handleInsertStempel = (editorInstance) => {
-    if (!editorInstance) return;
+  const handleInsertSignature = () => {
+    const ttdUrl = `http://localhost:8000/storage/${user.tanda_tangan_path}`;
+    const label = signEditorMode === 'second' ? 'Penandatangan II' : 'Penandatangan I';
+    const html = `<div contenteditable="false" style="display: inline-block; text-align: center; margin: 10px; cursor: move; border: 1px dashed transparent;" onmouseover="this.style.borderColor='#ccc'" onmouseout="this.style.borderColor='transparent'"><img src="${ttdUrl}" alt="TTE ${label}" style="max-height: 120px; width: auto; pointer-events: none;" /><br/><span style="font-size: 10pt; color: #555; pointer-events: none;">${label}:<br/><strong>${user.nama_lengkap}</strong></span></div>`;
+    insertHtmlToJodit(html);
+  };
+
+  const handleInsertStempel = () => {
     if (!user?.stempel_path) {
       toast.error('Anda belum mengupload stempel di Profil');
       return;
     }
     const stempelUrl = `http://localhost:8000/storage/${user.stempel_path}`;
-    const html = `<div style="display: inline-block; margin: 10px;"><img src="${stempelUrl}" alt="Stempel" style="max-height: 100px; width: auto;" /></div>`;
-    editorInstance.insertContent(html);
+    // Menggunakan position relative dan negative margin agar stempel "menimpa" tanda tangan/teks di sebelahnya (efek In Front of Text)
+    const html = `<div contenteditable="false" style="display: inline-block; position: relative; z-index: 10; margin-top: -40px; margin-left: -50px; opacity: 0.85; cursor: move; border: 1px dashed transparent;" onmouseover="this.style.borderColor='#ccc'" onmouseout="this.style.borderColor='transparent'"><img src="${stempelUrl}" alt="Stempel" style="max-height: 110px; width: auto; pointer-events: none;" /></div>`;
+    insertHtmlToJodit(html);
   };
 
-  const handleInsertAlignedBlock = (editorInstance, position) => {
-    if (!editorInstance) return;
+  const handleInsertAlignedBlock = (position) => {
     const align = position === 'left' ? 'left' : position === 'right' ? 'right' : 'center';
-    editorInstance.insertContent(`<div style="text-align: ${align}; margin-top: 30px;">&nbsp;</div>`);
-    // Move cursor inside the div
-    editorInstance.selection.select(editorInstance.selection.getNode());
-    editorInstance.selection.collapse(false);
+    const html = `<div style="text-align: ${align}; margin-top: 30px;">&nbsp;</div>`;
+    insertHtmlToJodit(html);
   };
 
   const handleSaveSignEditor = async () => {
@@ -889,7 +929,7 @@ export default function NaskahDetailPage() {
                 <button 
                   type="button" 
                   className="btn btn-primary btn-sm"
-                  onClick={() => handleInsertSignature(editorRef.current)}
+                  onClick={() => handleInsertSignature()}
                 >
                   📝 Sisipkan Tanda Tangan
                 </button>
@@ -897,7 +937,7 @@ export default function NaskahDetailPage() {
                   <button 
                     type="button" 
                     className="btn btn-secondary btn-sm"
-                    onClick={() => handleInsertStempel(editorRef.current)}
+                    onClick={() => handleInsertStempel()}
                   >
                     🔏 Sisipkan Stempel
                   </button>
@@ -908,7 +948,7 @@ export default function NaskahDetailPage() {
                   type="button" 
                   className="btn btn-ghost btn-sm"
                   style={{ fontSize: '11px' }}
-                  onClick={() => handleInsertAlignedBlock(editorRef.current, 'left')}
+                  onClick={() => handleInsertAlignedBlock('left')}
                 >
                   ⬅ Posisi Kiri Bawah
                 </button>
@@ -916,7 +956,7 @@ export default function NaskahDetailPage() {
                   type="button" 
                   className="btn btn-ghost btn-sm"
                   style={{ fontSize: '11px' }}
-                  onClick={() => handleInsertAlignedBlock(editorRef.current, 'center')}
+                  onClick={() => handleInsertAlignedBlock('center')}
                 >
                   ⬇ Posisi Tengah Bawah
                 </button>
@@ -924,46 +964,16 @@ export default function NaskahDetailPage() {
                   type="button" 
                   className="btn btn-ghost btn-sm"
                   style={{ fontSize: '11px' }}
-                  onClick={() => handleInsertAlignedBlock(editorRef.current, 'right')}
+                  onClick={() => handleInsertAlignedBlock('right')}
                 >
                   ➡ Posisi Kanan Bawah
                 </button>
               </div>
-              <Editor
-                apiKey="ern0cy0zzrd7z1v1xf7y0glwofutjfdq8ptz9z7y9btlv2rk"
-                onInit={(evt, editor) => { editorRef.current = editor; }}
+              <JoditEditor
+                ref={editorRef}
                 value={signEditorContent}
-                onEditorChange={(content) => setSignEditorContent(content)}
-                init={{
-                  height: 450,
-                  menubar: 'edit view insert format',
-                  plugins: [
-                    'advlist', 'autolink', 'lists', 'link', 'image',
-                    'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                    'table', 'help', 'wordcount'
-                  ],
-                  toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist | table image | removeformat',
-                  content_style: `
-                    body { font-family: "Times New Roman", serif; font-size: 12pt; line-height: 1.6; padding: 20px; }
-                    img { cursor: move; max-width: 100%; }
-                    img.mce-selected { outline: 2px solid #3b82f6; }
-                  `,
-                  // Image flexibility settings
-                  image_advtab: true,
-                  image_caption: true,
-                  object_resizing: true,
-                  resize_img_proportional: true,
-                  image_dimensions: true,
-                  // Allow drag and drop images within editor
-                  paste_data_images: true,
-                  automatic_uploads: false,
-                  // Remove forced positioning constraints
-                  forced_root_block: 'div',
-                  valid_styles: { '*': 'text-align,margin,margin-top,margin-bottom,margin-left,margin-right,padding,float,display,width,height,max-width,max-height,position,top,left,right,bottom,opacity,inline-block' },
-                  extended_valid_elements: 'img[*],div[*],span[*],br',
-                  branding: false,
-                  promotion: false,
-                }}
+                config={joditSignConfig}
+                onChange={(content) => setSignEditorContent(content)}
               />
             </div>
             <div className="card-footer" style={{ padding: '16px 24px', display: 'flex', justifyContent: 'flex-end', gap: '12px', background: 'var(--slate-50)', borderTop: '1px solid var(--slate-200)', flexShrink: 0 }}>
