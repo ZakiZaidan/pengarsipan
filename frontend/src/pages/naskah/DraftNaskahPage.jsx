@@ -73,7 +73,7 @@ export default function DraftNaskahPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <div className="page-header">
         <div>
           <h2 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--slate-900)' }}>Kelola Draft Naskah</h2>
           <p style={{ fontSize: '13px', color: 'var(--slate-500)' }}>Daftar rancangan surat dinas yang sedang dikerjakan</p>

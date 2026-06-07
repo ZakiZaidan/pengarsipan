@@ -50,9 +50,11 @@ export default function NaskahKeluarPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--slate-900)' }}>Daftar Naskah Dinas Keluar</h2>
-        <p style={{ fontSize: '13px', color: 'var(--slate-500)' }}>Lacak status pengajuan, verifikasi, tanda tangan, dan pengiriman naskah dinas keluar</p>
+      <div className="page-header">
+        <div>
+          <h2 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--slate-900)' }}>Daftar Naskah Dinas Keluar</h2>
+          <p style={{ fontSize: '13px', color: 'var(--slate-500)' }}>Lacak status pengajuan, verifikasi, tanda tangan, dan pengiriman naskah dinas keluar</p>
+        </div>
       </div>
 
       {/* Filter panel */}

@@ -163,7 +163,7 @@ export default function TemplatePage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <div className="page-header">
         <div>
           <h2 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--slate-900)' }}>Template Naskah Dinas</h2>
           <p style={{ fontSize: '13px', color: 'var(--slate-505)' }}>Kelola template naskah dinas baku untuk mempercepat penyusunan dokumen</p>

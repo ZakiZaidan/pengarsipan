@@ -131,7 +131,7 @@ export default function SistemPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <div className="page-header">
         <div>
           <h2 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--slate-900)' }}>Konfigurasi Sistem</h2>
           <p style={{ fontSize: '13px', color: 'var(--slate-505)' }}>Atur standar penomoran, identitas organisasi, kop surat, dan parameter retensi arsip</p>

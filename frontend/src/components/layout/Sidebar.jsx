@@ -17,7 +17,7 @@ import {
   Sliders
 } from 'lucide-react';
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }) {
   const { user, logout } = useAuthStore();
   const { count: unreadCount, countDisposisi, countNaskahKeluar, countNaskahMasuk } = useNotifikasiStore();
   const navigate = useNavigate();
@@ -40,6 +40,11 @@ export default function Sidebar() {
       case 'ketua_panitia': return 'Ketua Panitia';
       default: return role;
     }
+  };
+
+  // Close sidebar on mobile after navigating
+  const handleNavClick = () => {
+    if (onClose) onClose();
   };
 
   // Define sidebar links based on user role
@@ -73,7 +78,7 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
       <div className="sidebar-header">
         <img src="/logo forum.png" alt="Logo Forum" style={{ width: '48px', height: '48px', objectFit: 'contain', borderRadius: '50%' }} />
         <div>
@@ -96,6 +101,7 @@ export default function Sidebar() {
                   key={itemIdx} 
                   to={item.path} 
                   className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                  onClick={handleNavClick}
                 >
                   <item.icon className="nav-icon" />
                   <span>{item.name}</span>

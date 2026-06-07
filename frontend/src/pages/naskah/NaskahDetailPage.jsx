@@ -312,7 +312,7 @@ export default function NaskahDetailPage() {
   return (
     <div>
       {/* Header back button */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <div className="page-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <button className="btn btn-secondary btn-icon" onClick={() => navigate(-1)} title="Kembali">
             <ArrowLeft size={18} />
