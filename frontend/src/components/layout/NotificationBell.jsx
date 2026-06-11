@@ -51,7 +51,7 @@ export default function NotificationBell() {
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative" ref={dropdownRef} id="notification-bell">
       <button 
         className="notification-bell" 
         onClick={() => setIsOpen(!isOpen)}

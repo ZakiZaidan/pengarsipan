@@ -97,7 +97,7 @@ export default function NaskahMasukPage() {
           <h2 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--slate-900)' }}>Registrasi Naskah Masuk</h2>
           <p style={{ fontSize: '13px', color: 'var(--slate-500)' }}>Daftar surat resmi yang diterima dari pihak eksternal organisasi</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+        <button id="btn-register-masuk" className="btn btn-primary" onClick={() => setShowModal(true)}>
           <Plus size={18} /> Register Surat Masuk
         </button>
       </div>
@@ -105,7 +105,7 @@ export default function NaskahMasukPage() {
       {/* Filter and search */}
       <div className="card" style={{ marginBottom: '20px' }}>
         <div className="card-body" style={{ padding: '16px 24px' }}>
-          <div style={{ position: 'relative', maxWidth: '360px' }}>
+          <div id="search-masuk" style={{ position: 'relative', maxWidth: '360px' }}>
             <Search 
               size={18} 
               style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--slate-400)' }} 
@@ -131,7 +131,7 @@ export default function NaskahMasukPage() {
               Tidak ada naskah masuk terdaftar.
             </div>
           ) : (
-            <div className="data-table-wrapper">
+            <div className="data-table-wrapper" id="table-masuk">
               <table className="data-table">
                 <thead>
                   <tr>

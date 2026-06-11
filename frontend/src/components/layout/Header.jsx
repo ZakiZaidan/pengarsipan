@@ -3,7 +3,8 @@ import { useLocation, Link } from 'react-router-dom';
 import useAuthStore from '../../stores/authStore';
 import NotificationBell from './NotificationBell';
 import ProfilModal from '../profil/ProfilModal';
-import { Menu } from 'lucide-react';
+import { Menu, HelpCircle } from 'lucide-react';
+import { startContextualTour } from '../../services/tourGuide';
 
 export default function Header({ onMenuToggle }) {
   const { user } = useAuthStore();
@@ -28,6 +29,10 @@ export default function Header({ onMenuToggle }) {
     return 'Halaman';
   };
 
+  const handleStartTour = () => {
+    startContextualTour(location.pathname, user?.peran);
+  };
+
   return (
     <header className="header">
       <div className="header-left">
@@ -35,14 +40,45 @@ export default function Header({ onMenuToggle }) {
         <button className="menu-toggle" onClick={onMenuToggle} aria-label="Toggle menu">
           <Menu size={22} />
         </button>
-        <h2 className="header-title">{getBreadcrumbs()}</h2>
+        <h2 className="header-title" id="header-breadcrumb">{getBreadcrumbs()}</h2>
       </div>
 
       <div className="header-right">
+        <button
+          id="btn-tour-guide"
+          className="btn btn-ghost btn-sm"
+          onClick={handleStartTour}
+          title="Panduan Penggunaan"
+          style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '6px', 
+            color: 'var(--primary-600)',
+            fontSize: '13px',
+            fontWeight: '600',
+            padding: '6px 12px',
+            borderRadius: 'var(--radius)',
+            border: '1px solid var(--primary-200)',
+            background: 'var(--primary-50)',
+            transition: 'all 0.2s',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'var(--primary-100)';
+            e.currentTarget.style.borderColor = 'var(--primary-300)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'var(--primary-50)';
+            e.currentTarget.style.borderColor = 'var(--primary-200)';
+          }}
+        >
+          <HelpCircle size={16} />
+          <span>Panduan</span>
+        </button>
         <NotificationBell />
         <div style={{ height: '24px', width: '1px', backgroundColor: 'var(--slate-200)' }}></div>
         {user && (
           <div 
+            id="header-profile"
             style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '4px 8px', borderRadius: 'var(--radius)', transition: 'background-color 0.2s' }}
             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--slate-50)'}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
@@ -64,3 +100,4 @@ export default function Header({ onMenuToggle }) {
     </header>
   );
 }
+

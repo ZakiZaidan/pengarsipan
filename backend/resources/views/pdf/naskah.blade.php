@@ -7,7 +7,7 @@
             font-family: 'Times New Roman', serif;
             font-size: 12pt;
             margin: 0;
-            padding: 40px;
+            padding: 2px 7px 25px 7px;
             position: relative;
         }
         .kop {
@@ -47,8 +47,8 @@
 
     @if($dengan_kop)
         @if(isset($kop_data_url) && $kop_data_url)
-            <div style="text-align: center; margin-bottom: 20px;">
-                <img src="{{ $kop_data_url }}" alt="Kop Surat" style="max-width: 100%; max-height: 150px;">
+            <div style="text-align: center; margin-bottom: 10px;">
+                <img src="{{ $kop_data_url }}" alt="Kop Surat" style="max-width: 100%; max-height: 160px;">
             </div>
         @else
             <div class="kop">

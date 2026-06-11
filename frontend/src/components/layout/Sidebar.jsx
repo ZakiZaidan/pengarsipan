@@ -2,16 +2,16 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../stores/authStore';
 import useNotifikasiStore from '../../stores/notifikasiStore';
-import { 
-  LayoutDashboard, 
-  FileText, 
-  Mail, 
-  Send, 
-  Share2, 
-  Archive, 
-  FileDown, 
-  Users, 
-  Settings, 
+import {
+  LayoutDashboard,
+  FileText,
+  Mail,
+  Send,
+  Share2,
+  Archive,
+  FileDown,
+  Users,
+  Settings,
   LogOut,
   FolderOpen,
   Sliders
@@ -42,6 +42,11 @@ export default function Sidebar({ isOpen, onClose }) {
     }
   };
 
+  // Helper to create unique ID from path
+  const getNavId = (path) => {
+    return 'nav-' + path.replace(/\//g, '-').replace(/^-/, '');
+  };
+
   // Close sidebar on mobile after navigating
   const handleNavClick = () => {
     if (onClose) onClose();
@@ -51,6 +56,7 @@ export default function Sidebar({ isOpen, onClose }) {
   const menuItems = [
     {
       title: 'Menu Utama',
+      id: 'section-menu-utama',
       items: [
         { name: 'Dashboard', path: '/', icon: LayoutDashboard, roles: ['ketufor', 'waketufor', 'sekretaris', 'ketua_panitia'] },
         { name: 'Draft Naskah', path: '/draft', icon: FileText, roles: ['ketufor', 'waketufor', 'sekretaris'] },
@@ -61,6 +67,7 @@ export default function Sidebar({ isOpen, onClose }) {
     },
     {
       title: 'Kearsipan & Ekspor',
+      id: 'section-kearsipan',
       items: [
         { name: 'Arsip Aktif', path: '/arsip-aktif', icon: Archive, roles: ['ketufor', 'waketufor', 'sekretaris'] },
         { name: 'Arsip Inaktif', path: '/arsip-inaktif', icon: FolderOpen, roles: ['ketufor', 'waketufor', 'sekretaris'] },
@@ -69,6 +76,7 @@ export default function Sidebar({ isOpen, onClose }) {
     },
     {
       title: 'Pengaturan',
+      id: 'section-pengaturan',
       items: [
         { name: 'Kelola Pengguna', path: '/pengaturan/pengguna', icon: Users, roles: ['ketufor'] },
         { name: 'Template Naskah', path: '/pengaturan/template', icon: FileText, roles: ['ketufor', 'sekretaris'] },
@@ -78,12 +86,12 @@ export default function Sidebar({ isOpen, onClose }) {
   ];
 
   return (
-    <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
-      <div className="sidebar-header">
+    <aside className={`sidebar ${isOpen ? 'open' : ''}`} id="sidebar">
+      <div className="sidebar-header" id="sidebar-header">
         <img src="/logo forum.png" alt="Logo Forum" style={{ width: '48px', height: '48px', objectFit: 'contain', borderRadius: '50%' }} />
         <div>
           <h1 className="sidebar-title">Sistem Arsip</h1>
-          <p className="sidebar-subtitle">Forum Anak Muda</p>
+          <p className="sidebar-subtitle">Forum Duta Anti Narkoba</p>
         </div>
       </div>
 
@@ -94,12 +102,13 @@ export default function Sidebar({ isOpen, onClose }) {
           if (filteredItems.length === 0) return null;
 
           return (
-            <div key={idx} className="nav-section">
+            <div key={idx} className="nav-section" id={section.id}>
               <h2 className="nav-section-title">{section.title}</h2>
               {filteredItems.map((item, itemIdx) => (
-                <NavLink 
-                  key={itemIdx} 
-                  to={item.path} 
+                <NavLink
+                  key={itemIdx}
+                  to={item.path}
+                  id={getNavId(item.path)}
                   className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
                   onClick={handleNavClick}
                 >
@@ -121,7 +130,7 @@ export default function Sidebar({ isOpen, onClose }) {
         })}
       </nav>
 
-      <div className="sidebar-footer">
+      <div className="sidebar-footer" id="sidebar-footer">
         {user && (
           <div className="sidebar-user">
             <div className="sidebar-avatar">
@@ -131,11 +140,12 @@ export default function Sidebar({ isOpen, onClose }) {
               <h4 className="sidebar-user-name" title={user.nama_lengkap}>{user.nama_lengkap}</h4>
               <p className="sidebar-user-role">{formatRole(user.peran)}</p>
             </div>
-            <button 
-              onClick={handleLogout} 
-              className="btn btn-ghost btn-sm" 
+            <button
+              onClick={handleLogout}
+              className="btn btn-ghost btn-sm"
               style={{ color: 'var(--slate-400)', padding: '6px' }}
               title="Keluar"
+              id="btn-logout"
             >
               <LogOut size={18} />
             </button>
@@ -145,3 +155,4 @@ export default function Sidebar({ isOpen, onClose }) {
     </aside>
   );
 }
+

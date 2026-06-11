@@ -78,13 +78,13 @@ export default function DraftNaskahPage() {
           <h2 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--slate-900)' }}>Kelola Draft Naskah</h2>
           <p style={{ fontSize: '13px', color: 'var(--slate-500)' }}>Daftar rancangan surat dinas yang sedang dikerjakan</p>
         </div>
-        <button className="btn btn-primary" onClick={() => navigate('/draft/tambah')}>
+        <button id="btn-buat-draft" className="btn btn-primary" onClick={() => navigate('/draft/tambah')}>
           <FilePlus size={18} /> Buat Draft Baru
         </button>
       </div>
 
       {/* Filter Tabs */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+      <div id="filter-draft" style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
         <button 
           className={`btn btn-sm ${filter === 'semua' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setFilter('semua')}
@@ -113,7 +113,7 @@ export default function DraftNaskahPage() {
               {filter === 'draft' ? 'Tidak ada draft yang belum diajukan.' : filter === 'diajukan' ? 'Tidak ada draft yang sudah diajukan.' : 'Belum ada draft naskah dinas. Silakan klik tombol "Buat Draft Baru" untuk memulai.'}
             </div>
           ) : (
-            <div className="data-table-wrapper">
+            <div className="data-table-wrapper" id="table-draft">
               <table className="data-table">
                 <thead>
                   <tr>

@@ -70,7 +70,7 @@ export default function ArsipAktifPage() {
       </div>
 
       {/* Filters */}
-      <div className="card" style={{ marginBottom: '20px' }}>
+      <div className="card" style={{ marginBottom: '20px' }} id="filter-arsip-aktif">
         <div className="card-body" style={{ padding: '16px 24px', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
           <div style={{ position: 'relative', minWidth: '280px' }}>
             <Search 
@@ -113,7 +113,7 @@ export default function ArsipAktifPage() {
               Belum ada berkas arsip aktif yang didaftarkan.
             </div>
           ) : (
-            <div className="data-table-wrapper">
+            <div className="data-table-wrapper" id="table-arsip-aktif">
               <table className="data-table">
                 <thead>
                   <tr>

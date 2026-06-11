@@ -94,7 +94,7 @@ export default function DisposisiListPage() {
       </div>
 
       {/* Tabs and filters */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
+      <div id="filter-disposisi" style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
         {isPimpinan && (
           <div style={{ display: 'flex', gap: '8px', background: 'var(--slate-200)', padding: '4px', borderRadius: 'var(--radius)', border: '1px solid var(--slate-300)' }}>
             <button 
@@ -138,7 +138,7 @@ export default function DisposisiListPage() {
               Tidak ada disposisi ditemukan.
             </div>
           ) : (
-            <div className="data-table-wrapper">
+            <div className="data-table-wrapper" id="table-disposisi">
               <table className="data-table">
                 <thead>
                   <tr>
