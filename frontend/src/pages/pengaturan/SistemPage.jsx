@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../../services/api';
+import api, { BASE_URL } from '../../services/api';
 import useAuthStore from '../../stores/authStore';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { Sliders, HelpCircle, Save, Upload, ShieldAlert, Award, FileText, CheckCircle } from 'lucide-react';
@@ -339,7 +339,7 @@ export default function SistemPage() {
                   <div style={{ width: '100%', border: '1px dashed var(--slate-200)', padding: '12px', borderRadius: 'var(--radius-sm)', display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: '#fff' }}>
                     <div style={{ fontSize: '11px', color: 'var(--slate-400)', alignSelf: 'flex-start', marginBottom: '8px' }}>Preview Kop Terpasang:</div>
                     <img 
-                      src={`http://localhost:8000/storage/${kopPath}`} 
+                      src={`${BASE_URL}/storage/${kopPath}`} 
                       alt="Kop Organisasi" 
                       style={{ width: '100%', maxHeight: '80px', objectFit: 'contain' }}
                       onError={(e) => {

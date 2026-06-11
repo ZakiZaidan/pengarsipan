@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import useAuthStore from '../../stores/authStore';
-import api from '../../services/api';
+import api, { BASE_URL } from '../../services/api';
 import toast from 'react-hot-toast';
 import { Upload, X, User } from 'lucide-react';
 
@@ -109,7 +109,7 @@ export default function ProfilModal({ onClose }) {
             {user?.tanda_tangan_path ? (
               <div style={{ border: '1px solid var(--slate-200)', borderRadius: 'var(--radius)', padding: '12px', marginBottom: '16px', background: 'var(--slate-50)' }}>
                 <img 
-                  src={`http://localhost:8000/storage/${user.tanda_tangan_path}`} 
+                  src={`${BASE_URL}/storage/${user.tanda_tangan_path}`} 
                   alt="Tanda Tangan" 
                   style={{ maxHeight: '100px', maxWidth: '100%', objectFit: 'contain' }}
                 />
@@ -151,7 +151,7 @@ export default function ProfilModal({ onClose }) {
             {user?.stempel_path ? (
               <div style={{ border: '1px solid var(--slate-200)', borderRadius: 'var(--radius)', padding: '12px', marginBottom: '16px', background: 'var(--slate-50)' }}>
                 <img 
-                  src={`http://localhost:8000/storage/${user.stempel_path}`} 
+                  src={`${BASE_URL}/storage/${user.stempel_path}`} 
                   alt="Stempel" 
                   style={{ maxHeight: '100px', maxWidth: '100%', objectFit: 'contain' }}
                 />

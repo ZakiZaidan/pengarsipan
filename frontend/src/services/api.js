@@ -1,7 +1,12 @@
 import axios from 'axios';
 
+// Auto-detect URL: jika localhost gunakan port 8000, jika production gunakan domain yang sama
+export const BASE_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:8000'
+  : `${window.location.protocol}//${window.location.hostname}`;
+
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api',
+  baseURL: `${BASE_URL}/api`,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
@@ -25,7 +30,7 @@ api.interceptors.response.use(
 
 // Function to get CSRF cookie from Sanctum
 export const getCsrfCookie = async () => {
-  await axios.get('http://localhost:8000/sanctum/csrf-cookie', {
+  await axios.get(`${BASE_URL}/sanctum/csrf-cookie`, {
     withCredentials: true,
   });
 };

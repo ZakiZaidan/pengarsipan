@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import JoditEditor from 'jodit-react';
-import api from '../../services/api';
+import api, { BASE_URL } from '../../services/api';
 import useAuthStore from '../../stores/authStore';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { 
@@ -188,7 +188,7 @@ export default function NaskahDetailPage() {
   };
 
   const handleInsertSignature = () => {
-    const ttdUrl = `http://localhost:8000/storage/${user.tanda_tangan_path}`;
+    const ttdUrl = `${BASE_URL}/storage/${user.tanda_tangan_path}`;
     const label = signEditorMode === 'second' ? 'Penandatangan II' : 'Penandatangan I';
     const html = `<div contenteditable="false" style="display: inline-block; text-align: center; margin: 10px; cursor: move; border: 1px dashed transparent;" onmouseover="this.style.borderColor='#ccc'" onmouseout="this.style.borderColor='transparent'"><img src="${ttdUrl}" alt="TTE ${label}" style="max-height: 120px; width: auto; pointer-events: none;" /><br/><span style="font-size: 10pt; color: #555; pointer-events: none;">${label}:<br/><strong>${user.nama_lengkap}</strong></span></div>`;
     insertHtmlToJodit(html);
@@ -199,7 +199,7 @@ export default function NaskahDetailPage() {
       toast.error('Anda belum mengupload stempel di Profil');
       return;
     }
-    const stempelUrl = `http://localhost:8000/storage/${user.stempel_path}`;
+    const stempelUrl = `${BASE_URL}/storage/${user.stempel_path}`;
     // Menggunakan position relative dan negative margin agar stempel "menimpa" tanda tangan/teks di sebelahnya (efek In Front of Text)
     const html = `<div contenteditable="false" style="display: inline-block; position: relative; z-index: 10; margin-top: -40px; margin-left: -50px; opacity: 0.85; cursor: move; border: 1px dashed transparent;" onmouseover="this.style.borderColor='#ccc'" onmouseout="this.style.borderColor='transparent'"><img src="${stempelUrl}" alt="Stempel" style="max-height: 110px; width: auto; pointer-events: none;" /></div>`;
     insertHtmlToJodit(html);
