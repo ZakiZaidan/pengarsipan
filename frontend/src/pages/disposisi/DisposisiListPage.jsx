@@ -86,7 +86,7 @@ export default function DisposisiListPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <div className="page-header">
         <div>
           <h2 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--slate-900)' }}>Delegasi & Disposisi Surat</h2>
           <p style={{ fontSize: '13px', color: 'var(--slate-500)' }}>Daftar penugasan dan pelaporan tindak lanjut surat dinas organisasi</p>

@@ -3,8 +3,9 @@ import { useLocation, Link } from 'react-router-dom';
 import useAuthStore from '../../stores/authStore';
 import NotificationBell from './NotificationBell';
 import ProfilModal from '../profil/ProfilModal';
+import { Menu } from 'lucide-react';
 
-export default function Header() {
+export default function Header({ onMenuToggle }) {
   const { user } = useAuthStore();
   const location = useLocation();
   const [showProfilModal, setShowProfilModal] = useState(false);
@@ -30,6 +31,10 @@ export default function Header() {
   return (
     <header className="header">
       <div className="header-left">
+        {/* Hamburger menu — only visible on mobile/tablet via CSS */}
+        <button className="menu-toggle" onClick={onMenuToggle} aria-label="Toggle menu">
+          <Menu size={22} />
+        </button>
         <h2 className="header-title">{getBreadcrumbs()}</h2>
       </div>
 
@@ -43,7 +48,7 @@ export default function Header() {
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             onClick={() => setShowProfilModal(true)}
           >
-            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--slate-700)' }}>
+            <span className="header-user-name" style={{ fontSize: '13px', fontWeight: '600', color: 'var(--slate-700)' }}>
               {user.nama_lengkap}
             </span>
             {user.tanda_tangan_path && (

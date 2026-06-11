@@ -107,12 +107,14 @@ export default function EksporPdfPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--slate-900)' }}>Ekstrak & Ekspor PDF Resmi</h2>
-        <p style={{ fontSize: '13px', color: 'var(--slate-505)' }}>Generate naskah dinas menjadi dokumen PDF standar organisasi lengkap dengan kop surat dan watermark</p>
+      <div className="page-header">
+        <div>
+          <h2 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--slate-900)' }}>Ekstrak & Ekspor PDF Resmi</h2>
+          <p style={{ fontSize: '13px', color: 'var(--slate-505)' }}>Generate naskah dinas menjadi dokumen PDF standar organisasi lengkap dengan kop surat dan watermark</p>
+        </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '24px', alignItems: 'start' }}>
+      <div className="ekspor-grid">
         {/* Export Form */}
         <div className="card">
           <div className="card-header">

@@ -66,19 +66,11 @@ export default function DashboardPage() {
   return (
     <div>
       {/* Welcome banner */}
-      <div className="card" style={{
-        background: 'linear-gradient(135deg, var(--primary-800) 0%, var(--primary-900) 100%)',
-        color: 'white',
-        border: 'none',
-        borderRadius: 'var(--radius-lg)',
-        padding: '32px',
-        marginBottom: '24px',
-        boxShadow: 'var(--shadow-lg)'
-      }}>
-        <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '8px', letterSpacing: '-0.02em' }}>
+      <div className="card welcome-banner">
+        <h2>
           Selamat Datang, {user?.nama_lengkap}!
         </h2>
-        <p style={{ color: 'var(--primary-100)', fontSize: '15px', maxWidth: '600px' }}>
+        <p>
           Anda login sebagai <strong>{user?.peran === 'ketufor' ? 'Ketua Formatur' : user?.peran === 'waketufor' ? 'Wakil Ketua Formatur' : 'Sekretaris'}</strong>. Gunakan modul navigasi di sebelah kiri untuk mengelola persuratan dan pengarsipan organisasi.
         </p>
       </div>
@@ -144,7 +136,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Quick Actions & Recent documents */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', alignItems: 'start' }}>
+      <div className="dashboard-grid">
         {/* Recent letters */}
         <div className="card">
           <div className="card-header">
