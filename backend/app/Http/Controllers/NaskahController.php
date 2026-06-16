@@ -226,7 +226,7 @@ class NaskahController extends Controller
     {
         $user = $request->user();
         if (!$user->isPimpinan()) {
-            return response()->json(['message' => 'Hanya Ketufor/Waketufor yang dapat menyetujui'], 403);
+            return response()->json(['message' => 'Hanya Pimpinan yang dapat menyetujui'], 403);
         }
 
         $naskah = Naskah::findOrFail($id);
@@ -263,7 +263,7 @@ class NaskahController extends Controller
     {
         $user = $request->user();
         if (!$user->isPimpinan()) {
-            return response()->json(['message' => 'Hanya Ketufor/Waketufor yang dapat menolak'], 403);
+            return response()->json(['message' => 'Hanya Pimpinan yang dapat menolak'], 403);
         }
 
         $request->validate(['catatan' => 'required|string']);
@@ -304,7 +304,7 @@ class NaskahController extends Controller
     {
         $user = $request->user();
         if (!$user->isPimpinan()) {
-            return response()->json(['message' => 'Hanya Ketufor/Waketufor yang dapat menandatangani'], 403);
+            return response()->json(['message' => 'Hanya Pimpinan yang dapat menandatangani'], 403);
         }
 
         if (!$user->tanda_tangan_path) {
@@ -377,7 +377,7 @@ class NaskahController extends Controller
     {
         $user = $request->user();
         if (!$user->isPimpinan()) {
-            return response()->json(['message' => 'Hanya Ketufor/Waketufor yang dapat mengirim'], 403);
+            return response()->json(['message' => 'Hanya Pimpinan yang dapat mengirim'], 403);
         }
 
         $naskah = Naskah::findOrFail($id);
@@ -421,7 +421,7 @@ class NaskahController extends Controller
     {
         $user = $request->user();
         if (!$user->isPimpinan()) {
-            return response()->json(['message' => 'Hanya Ketufor/Waketufor yang dapat mengarsipkan langsung'], 403);
+            return response()->json(['message' => 'Hanya Pimpinan yang dapat mengarsipkan langsung'], 403);
         }
 
         $naskah = Naskah::findOrFail($id);

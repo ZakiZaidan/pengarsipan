@@ -49,7 +49,7 @@ class DisposisiController extends Controller
         $user = $request->user();
 
         if (!$user->isPimpinan()) {
-            return response()->json(['message' => 'Hanya Ketufor/Waketufor yang dapat membuat disposisi'], 403);
+            return response()->json(['message' => 'Hanya Pimpinan yang dapat membuat disposisi'], 403);
         }
 
         $validated = $request->validate([

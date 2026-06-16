@@ -104,7 +104,7 @@ class ArsipController extends Controller
     {
         $user = $request->user();
         if (!$user->isPimpinan()) {
-            return response()->json(['message' => 'Hanya Ketufor/Waketufor yang dapat memindahkan arsip'], 403);
+            return response()->json(['message' => 'Hanya Pimpinan yang dapat memindahkan arsip'], 403);
         }
 
         $arsip = Arsip::findOrFail($id);
