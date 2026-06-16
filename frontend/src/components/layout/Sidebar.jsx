@@ -34,8 +34,10 @@ export default function Sidebar({ isOpen, onClose }) {
 
   const formatRole = (role) => {
     switch (role) {
-      case 'ketufor': return 'Ketua Formatur';
-      case 'waketufor': return 'Wakil Ketua Formatur';
+      case 'ketufor': return 'Ketua Forum';
+      case 'waketufor': return 'Wakil Ketua Forum';
+      case 'penasehat': return 'Penasehat Forum';
+      case 'ketua_harian': return 'Ketua Harian';
       case 'sekretaris': return 'Sekretaris';
       case 'ketua_panitia': return 'Ketua Panitia';
       default: return role;
@@ -58,20 +60,20 @@ export default function Sidebar({ isOpen, onClose }) {
       title: 'Menu Utama',
       id: 'section-menu-utama',
       items: [
-        { name: 'Dashboard', path: '/', icon: LayoutDashboard, roles: ['ketufor', 'waketufor', 'sekretaris', 'ketua_panitia'] },
-        { name: 'Draft Naskah', path: '/draft', icon: FileText, roles: ['ketufor', 'waketufor', 'sekretaris'] },
-        { name: 'Naskah Masuk', path: '/naskah-masuk', icon: Mail, roles: ['ketufor', 'waketufor', 'sekretaris', 'ketua_panitia'] },
-        { name: 'Naskah Keluar', path: '/naskah-keluar', icon: Send, roles: ['ketufor', 'waketufor', 'sekretaris', 'ketua_panitia'] },
-        { name: 'Disposisi', path: '/disposisi', icon: Share2, roles: ['ketufor', 'waketufor', 'sekretaris', 'ketua_panitia'] },
+        { name: 'Dashboard', path: '/', icon: LayoutDashboard, roles: ['ketufor', 'waketufor', 'penasehat', 'ketua_harian', 'sekretaris', 'ketua_panitia'] },
+        { name: 'Draft Naskah', path: '/draft', icon: FileText, roles: ['ketufor', 'waketufor', 'penasehat', 'ketua_harian', 'sekretaris'] },
+        { name: 'Naskah Masuk', path: '/naskah-masuk', icon: Mail, roles: ['ketufor', 'waketufor', 'penasehat', 'ketua_harian', 'sekretaris', 'ketua_panitia'] },
+        { name: 'Naskah Keluar', path: '/naskah-keluar', icon: Send, roles: ['ketufor', 'waketufor', 'penasehat', 'ketua_harian', 'sekretaris', 'ketua_panitia'] },
+        { name: 'Disposisi', path: '/disposisi', icon: Share2, roles: ['ketufor', 'waketufor', 'penasehat', 'ketua_harian', 'sekretaris', 'ketua_panitia'] },
       ]
     },
     {
       title: 'Kearsipan & Ekspor',
       id: 'section-kearsipan',
       items: [
-        { name: 'Arsip Aktif', path: '/arsip-aktif', icon: Archive, roles: ['ketufor', 'waketufor', 'sekretaris'] },
-        { name: 'Arsip Inaktif', path: '/arsip-inaktif', icon: FolderOpen, roles: ['ketufor', 'waketufor', 'sekretaris'] },
-        { name: 'Ekspor PDF', path: '/ekspor-pdf', icon: FileDown, roles: ['ketufor', 'waketufor', 'sekretaris'] },
+        { name: 'Arsip Aktif', path: '/arsip-aktif', icon: Archive, roles: ['ketufor', 'waketufor', 'penasehat', 'ketua_harian', 'sekretaris'] },
+        { name: 'Arsip Inaktif', path: '/arsip-inaktif', icon: FolderOpen, roles: ['ketufor', 'waketufor', 'penasehat', 'ketua_harian', 'sekretaris'] },
+        { name: 'Ekspor PDF', path: '/ekspor-pdf', icon: FileDown, roles: ['ketufor', 'waketufor', 'penasehat', 'ketua_harian', 'sekretaris'] },
       ]
     },
     {
@@ -80,7 +82,7 @@ export default function Sidebar({ isOpen, onClose }) {
       items: [
         { name: 'Kelola Pengguna', path: '/pengaturan/pengguna', icon: Users, roles: ['ketufor'] },
         { name: 'Template Naskah', path: '/pengaturan/template', icon: FileText, roles: ['ketufor', 'sekretaris'] },
-        { name: 'Konfigurasi Sistem', path: '/pengaturan/sistem', icon: Sliders, roles: ['ketufor', 'waketufor'] },
+        { name: 'Konfigurasi Sistem', path: '/pengaturan/sistem', icon: Sliders, roles: ['ketufor', 'waketufor', 'penasehat', 'ketua_harian'] },
       ]
     }
   ];

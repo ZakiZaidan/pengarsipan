@@ -28,8 +28,16 @@ export default function SistemPage() {
   const [jraInaktifTahun, setJraInaktifTahun] = useState('5');
   const [kopPath, setKopPath] = useState('');
 
+  // Jabatan per Role Settings State
+  const [jabatanKetufor, setJabatanKetufor] = useState('');
+  const [jabatanWaketufor, setJabatanWaketufor] = useState('');
+  const [jabatanPenasehat, setJabatanPenasehat] = useState('');
+  const [jabatanKetuaHarian, setJabatanKetuaHarian] = useState('');
+  const [jabatanSekretaris, setJabatanSekretaris] = useState('');
+  const [jabatanKetuaPanitia, setJabatanKetuaPanitia] = useState('');
+
   const isKetufor = user?.peran === 'ketufor';
-  const isPimpinan = user?.peran === 'ketufor' || user?.peran === 'waketufor';
+  const isPimpinan = user?.peran === 'ketufor' || user?.peran === 'waketufor' || user?.peran === 'penasehat' || user?.peran === 'ketua_harian';
 
   const fetchSettings = async () => {
     try {
@@ -51,6 +59,12 @@ export default function SistemPage() {
           case 'jra_aktif_tahun': setJraAktifTahun(item.nilai || '2'); break;
           case 'jra_inaktif_tahun': setJraInaktifTahun(item.nilai || '5'); break;
           case 'kop_path': setKopPath(item.nilai); break;
+          case 'jabatan_ketufor': setJabatanKetufor(item.nilai); break;
+          case 'jabatan_waketufor': setJabatanWaketufor(item.nilai); break;
+          case 'jabatan_penasehat': setJabatanPenasehat(item.nilai); break;
+          case 'jabatan_ketua_harian': setJabatanKetuaHarian(item.nilai); break;
+          case 'jabatan_sekretaris': setJabatanSekretaris(item.nilai); break;
+          case 'jabatan_ketua_panitia': setJabatanKetuaPanitia(item.nilai); break;
           default: break;
         }
       });
@@ -112,6 +126,12 @@ export default function SistemPage() {
         { kunci: 'teks_watermark', nilai: teksWatermark, grup: 'ekspor' },
         { kunci: 'jra_aktif_tahun', nilai: jraAktifTahun, grup: 'arsip' },
         { kunci: 'jra_inaktif_tahun', nilai: jraInaktifTahun, grup: 'arsip' },
+        { kunci: 'jabatan_ketufor', nilai: jabatanKetufor, grup: 'jabatan' },
+        { kunci: 'jabatan_waketufor', nilai: jabatanWaketufor, grup: 'jabatan' },
+        { kunci: 'jabatan_penasehat', nilai: jabatanPenasehat, grup: 'jabatan' },
+        { kunci: 'jabatan_ketua_harian', nilai: jabatanKetuaHarian, grup: 'jabatan' },
+        { kunci: 'jabatan_sekretaris', nilai: jabatanSekretaris, grup: 'jabatan' },
+        { kunci: 'jabatan_ketua_panitia', nilai: jabatanKetuaPanitia, grup: 'jabatan' },
       ]
     };
 
@@ -317,6 +337,52 @@ export default function SistemPage() {
                       disabled={!isKetufor}
                       required
                     />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 4. Jabatan per Role Settings */}
+            <div className="card">
+              <div className="card-header" style={{ borderBottom: '1px solid var(--slate-150)', padding: '16px 24px' }}>
+                <h3 className="card-title" style={{ margin: 0, fontSize: '15px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Users size={18} color="var(--primary-600)" />
+                  Jabatan Lengkap per Peran (Tanda Tangan)
+                </h3>
+              </div>
+              <div className="card-body" style={{ padding: '24px' }}>
+                <p style={{ fontSize: '12px', color: 'var(--slate-500)', marginBottom: '20px' }}>Jabatan ini akan ditampilkan secara otomatis di bawah tanda tangan naskah dinas.</p>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">Jabatan Ketua Forum <span className="required">*</span></label>
+                    <input type="text" className="form-control" value={jabatanKetufor} onChange={(e) => setJabatanKetufor(e.target.value)} disabled={!isKetufor} required />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Jabatan Wakil Ketua Forum <span className="required">*</span></label>
+                    <input type="text" className="form-control" value={jabatanWaketufor} onChange={(e) => setJabatanWaketufor(e.target.value)} disabled={!isKetufor} required />
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">Jabatan Penasehat Forum <span className="required">*</span></label>
+                    <input type="text" className="form-control" value={jabatanPenasehat} onChange={(e) => setJabatanPenasehat(e.target.value)} disabled={!isKetufor} required />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Jabatan Ketua Harian <span className="required">*</span></label>
+                    <input type="text" className="form-control" value={jabatanKetuaHarian} onChange={(e) => setJabatanKetuaHarian(e.target.value)} disabled={!isKetufor} required />
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">Jabatan Sekretaris <span className="required">*</span></label>
+                    <input type="text" className="form-control" value={jabatanSekretaris} onChange={(e) => setJabatanSekretaris(e.target.value)} disabled={!isKetufor} required />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Jabatan Ketua Panitia <span className="required">*</span></label>
+                    <input type="text" className="form-control" value={jabatanKetuaPanitia} onChange={(e) => setJabatanKetuaPanitia(e.target.value)} disabled={!isKetufor} required />
                   </div>
                 </div>
               </div>

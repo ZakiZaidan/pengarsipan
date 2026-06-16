@@ -338,8 +338,10 @@ class NaskahController extends Controller
         } else {
             // Fallback: auto-inject di akhir (untuk backward compatibility)
             $ttdUrl = asset('storage/' . $user->tanda_tangan_path);
-            $label = $isSecondSigner ? 'Penandatangan II' : 'Penandatangan I';
-            $ttdHtml = '<div style="margin-top: 15px; display: inline-block; text-align: center; margin-right: 40px;"><img src="' . $ttdUrl . '" alt="TTE ' . $label . '" style="max-height: 100px; width: auto;" /><br/><span style="font-size: 11px; color: #64748b; font-family: sans-serif;">' . $label . ':<br/><strong>' . $user->nama_lengkap . '</strong></span></div>';
+            // Format TTD: Nama (uppercase) + Jabatan dari pengaturan sistem
+            $namaUpper = strtoupper($user->nama_lengkap);
+            $jabatan = \App\Models\Pengaturan::getValue('jabatan_' . $user->peran->value, strtoupper($user->peran->label()));
+            $ttdHtml = '<div style="margin-top: 15px; display: inline-block; text-align: center; margin-right: 40px;"><img src="' . $ttdUrl . '" alt="TTE" style="max-height: 100px; width: auto;" /><br/><span style="font-size: 11px; font-family: sans-serif;"><strong style="text-transform: uppercase;">' . $namaUpper . '</strong><br/>' . $jabatan . '</span></div>';
             
             $isiNaskah = $naskah->isi_naskah ?? '';
             if (str_contains($isiNaskah, '[TANDA_TANGAN]')) {

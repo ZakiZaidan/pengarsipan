@@ -70,8 +70,8 @@ export default function DashboardPage() {
         <h2>
           Selamat Datang, {user?.nama_lengkap}!
         </h2>
-        <p>
-          Anda login sebagai <strong>{user?.peran === 'ketufor' ? 'Ketua Formatur' : user?.peran === 'waketufor' ? 'Wakil Ketua Formatur' : 'Sekretaris'}</strong>. Gunakan modul navigasi di sebelah kiri untuk mengelola persuratan dan pengarsipan organisasi.
+        <p style={{ color: 'var(--slate-500)', fontSize: '14px', maxWidth: '600px', lineHeight: '1.6' }}>
+          Anda login sebagai <strong>{user?.peran === 'ketufor' ? 'Ketua Forum' : user?.peran === 'waketufor' ? 'Wakil Ketua Forum' : user?.peran === 'penasehat' ? 'Penasehat Forum' : user?.peran === 'ketua_harian' ? 'Ketua Harian' : user?.peran === 'ketua_panitia' ? 'Ketua Panitia' : 'Sekretaris'}</strong>. Gunakan modul navigasi di sebelah kiri untuk mengelola persuratan dan pengarsipan organisasi.
         </p>
       </div>
 
@@ -204,7 +204,8 @@ export default function DashboardPage() {
                   </button>
                 </>
               )}
-              {(user?.peran === 'ketufor' || user?.peran === 'waketufor') && (
+                {/* Action for Pimpinan */}
+              {(user?.peran === 'ketufor' || user?.peran === 'waketufor' || user?.peran === 'penasehat' || user?.peran === 'ketua_harian') && (
                 <>
                   <button className="btn btn-primary btn-block" style={{ width: '100%' }} onClick={() => navigate('/naskah-masuk')}>
                     <Mail size={18} /> Register Surat Masuk

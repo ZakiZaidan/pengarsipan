@@ -48,6 +48,9 @@ export default function NaskahDetailPage() {
   const [kodeKlasifikasi, setKodeKlasifikasi] = useState('UMUM');
   const [lokasiFisik, setLokasiFisik] = useState('');
 
+  // Jabatan settings for signature format
+  const [jabatanMap, setJabatanMap] = useState({});
+
   const fetchNaskah = async () => {
     try {
       setLoading(true);
@@ -64,8 +67,6 @@ export default function NaskahDetailPage() {
   const fetchUsers = async () => {
     try {
       const res = await api.get('/pengguna-list');
-      // Filter out the current user and leaders themselves to avoid self-disposisi if desired,
-      // or show all other users.
       const filtered = res.data.filter(u => u.id !== user?.id);
       setUsers(filtered);
     } catch (err) {
@@ -73,9 +74,24 @@ export default function NaskahDetailPage() {
     }
   };
 
+  const fetchJabatan = async () => {
+    try {
+      const res = await api.get('/pengaturan?grup=jabatan');
+      const data = res.data || [];
+      const map = {};
+      data.forEach(item => {
+        map[item.kunci] = item.nilai;
+      });
+      setJabatanMap(map);
+    } catch (err) {
+      // ignore — will use default labels
+    }
+  };
+
   useEffect(() => {
     fetchNaskah();
     fetchUsers();
+    fetchJabatan();
   }, [id]);
 
   const handleAjukan = async () => {
@@ -189,8 +205,9 @@ export default function NaskahDetailPage() {
 
   const handleInsertSignature = () => {
     const ttdUrl = `${BASE_URL}/storage/${user.tanda_tangan_path}`;
-    const label = signEditorMode === 'second' ? 'Penandatangan II' : 'Penandatangan I';
-    const html = `<div contenteditable="false" style="display: inline-block; text-align: center; margin: 10px; cursor: move; border: 1px dashed transparent;" onmouseover="this.style.borderColor='#ccc'" onmouseout="this.style.borderColor='transparent'"><img src="${ttdUrl}" alt="TTE ${label}" style="max-height: 120px; width: auto; pointer-events: none;" /><br/><span style="font-size: 10pt; color: #555; pointer-events: none;">${label}:<br/><strong>${user.nama_lengkap}</strong></span></div>`;
+    const namaUpper = user.nama_lengkap.toUpperCase();
+    const jabatan = jabatanMap[`jabatan_${user.peran}`] || user.peran.toUpperCase();
+    const html = `<div contenteditable="false" style="display: inline-block; text-align: center; margin: 10px; cursor: move; border: 1px dashed transparent;" onmouseover="this.style.borderColor='#ccc'" onmouseout="this.style.borderColor='transparent'"><img src="${ttdUrl}" alt="TTE" style="max-height: 120px; width: auto; pointer-events: none;" /><br/><span style="font-size: 10pt; pointer-events: none;"><strong>${namaUpper}</strong><br/>${jabatan}</span></div>`;
     insertHtmlToJodit(html);
   };
 
@@ -294,7 +311,7 @@ export default function NaskahDetailPage() {
 
   const nask = naskah;
   const isPembuat = nask?.dibuat_oleh === user?.id;
-  const isPimpinan = user?.peran === 'ketufor' || user?.peran === 'waketufor';
+  const isPimpinan = user?.peran === 'ketufor' || user?.peran === 'waketufor' || user?.peran === 'penasehat' || user?.peran === 'ketua_harian';
 
   const getStatusClass = (status) => {
     switch (status) {

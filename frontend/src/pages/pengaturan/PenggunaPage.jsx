@@ -177,6 +177,8 @@ export default function PenggunaPage() {
               <option value="">-- Semua Peran --</option>
               <option value="ketufor">Ketua Forum</option>
               <option value="waketufor">Wakil Ketua Forum</option>
+              <option value="penasehat">Penasehat Forum</option>
+              <option value="ketua_harian">Ketua Harian</option>
               <option value="sekretaris">Sekretaris</option>
               <option value="ketua_panitia">Ketua Panitia</option>
             </select>
@@ -311,6 +313,8 @@ export default function PenggunaPage() {
                     >
                       <option value="sekretaris">Sekretaris</option>
                       <option value="ketua_panitia">Ketua Panitia</option>
+                      <option value="penasehat">Penasehat Forum</option>
+                      <option value="ketua_harian">Ketua Harian</option>
                       <option value="waketufor">Wakil Ketua Forum</option>
                       <option value="ketufor">Ketua Forum</option>
                     </select>

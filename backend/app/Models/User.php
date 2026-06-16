@@ -53,6 +53,16 @@ class User extends Authenticatable
         return $this->peran === PeranEnum::WAKETUFOR;
     }
 
+    public function isPenasehat(): bool
+    {
+        return $this->peran === PeranEnum::PENASEHAT;
+    }
+
+    public function isKetuaHarian(): bool
+    {
+        return $this->peran === PeranEnum::KETUA_HARIAN;
+    }
+
     public function isSekretaris(): bool
     {
         return $this->peran === PeranEnum::SEKRETARIS;
@@ -60,7 +70,7 @@ class User extends Authenticatable
 
     public function isPimpinan(): bool
     {
-        return $this->isKetufor() || $this->isWaketufor();
+        return $this->isKetufor() || $this->isWaketufor() || $this->isPenasehat() || $this->isKetuaHarian();
     }
 
     public function isKetuaPanitia(): bool
