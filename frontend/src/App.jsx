@@ -81,46 +81,46 @@ export default function App() {
 
           {/* Draft Naskah */}
           <Route path="draft" element={
-            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris']}><DraftNaskahPage /></PrivateRoute>
+            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'penasehat', 'ketua_harian', 'sekretaris']}><DraftNaskahPage /></PrivateRoute>
           } />
           <Route path="draft/tambah" element={
-            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris']}><NaskahForm /></PrivateRoute>
+            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'penasehat', 'ketua_harian', 'sekretaris']}><NaskahForm /></PrivateRoute>
           } />
           <Route path="draft/edit/:id" element={
-            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris']}><NaskahForm /></PrivateRoute>
+            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'penasehat', 'ketua_harian', 'sekretaris']}><NaskahForm /></PrivateRoute>
           } />
 
           {/* Naskah Masuk */}
           <Route path="naskah-masuk" element={
-            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris', 'ketua_panitia']}><NaskahMasukPage /></PrivateRoute>
+            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'penasehat', 'ketua_harian', 'sekretaris', 'ketua_panitia']}><NaskahMasukPage /></PrivateRoute>
           } />
 
           {/* Naskah Keluar */}
           <Route path="naskah-keluar" element={
-            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris', 'ketua_panitia']}><NaskahKeluarPage /></PrivateRoute>
+            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'penasehat', 'ketua_harian', 'sekretaris', 'ketua_panitia']}><NaskahKeluarPage /></PrivateRoute>
           } />
 
           {/* Naskah Detail (Handles both masuk and keluar details) */}
           <Route path="naskah/:id" element={
-            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris', 'ketua_panitia']}><NaskahDetailPage /></PrivateRoute>
+            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'penasehat', 'ketua_harian', 'sekretaris', 'ketua_panitia']}><NaskahDetailPage /></PrivateRoute>
           } />
 
           {/* Disposisi */}
           <Route path="disposisi" element={
-            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris', 'ketua_panitia']}><DisposisiListPage /></PrivateRoute>
+            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'penasehat', 'ketua_harian', 'sekretaris', 'ketua_panitia']}><DisposisiListPage /></PrivateRoute>
           } />
 
           {/* Kearsipan */}
           <Route path="arsip-aktif" element={
-            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris']}><ArsipAktifPage /></PrivateRoute>
+            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'penasehat', 'ketua_harian', 'sekretaris']}><ArsipAktifPage /></PrivateRoute>
           } />
           <Route path="arsip-inaktif" element={
-            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris']}><ArsipInaktifPage /></PrivateRoute>
+            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'penasehat', 'ketua_harian', 'sekretaris']}><ArsipInaktifPage /></PrivateRoute>
           } />
 
           {/* Ekspor PDF */}
           <Route path="ekspor-pdf" element={
-            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'sekretaris']}><EksporPdfPage /></PrivateRoute>
+            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'penasehat', 'ketua_harian', 'sekretaris']}><EksporPdfPage /></PrivateRoute>
           } />
 
           {/* Pengaturan */}
@@ -131,7 +131,7 @@ export default function App() {
             <PrivateRoute allowedRoles={['ketufor', 'sekretaris']}><TemplatePage /></PrivateRoute>
           } />
           <Route path="pengaturan/sistem" element={
-            <PrivateRoute allowedRoles={['ketufor', 'waketufor']}><SistemPage /></PrivateRoute>
+            <PrivateRoute allowedRoles={['ketufor', 'waketufor', 'penasehat', 'ketua_harian']}><SistemPage /></PrivateRoute>
           } />
 
         </Route>

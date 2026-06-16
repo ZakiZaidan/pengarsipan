@@ -69,7 +69,7 @@ class WhatsAppService
      */
     public static function kirimKePimpinan(string $pesan): void
     {
-        $pimpinan = User::whereIn('peran', ['ketufor', 'waketufor'])
+        $pimpinan = User::whereIn('peran', ['ketufor', 'waketufor', 'penasehat', 'ketua_harian'])
             ->where('aktif', true)
             ->whereNotNull('nomor_wa')
             ->get();

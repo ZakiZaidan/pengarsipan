@@ -101,8 +101,8 @@ export default function ProfilModal({ onClose }) {
           <h4 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '4px' }}>{user?.nama_lengkap}</h4>
           <p style={{ color: 'var(--slate-500)', fontSize: '14px', marginBottom: '24px' }}>{user?.peran_label}</p>
 
-          {/* Tanda Tangan — hanya untuk Ketufor dan Waketufor */}
-          {(user?.peran === 'ketufor' || user?.peran === 'waketufor') && (
+          {/* Tanda Tangan — untuk para pimpinan */}
+          {(user?.peran === 'ketufor' || user?.peran === 'waketufor' || user?.peran === 'penasehat' || user?.peran === 'ketua_harian') && (
           <div style={{ borderTop: '1px solid var(--slate-200)', paddingTop: '24px' }}>
             <h5 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '16px', textAlign: 'left' }}>Tanda Tangan Elektronik</h5>
             

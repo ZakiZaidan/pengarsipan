@@ -32,7 +32,7 @@ class NotifikasiService
         string $tipe,
         ?string $referensiId = null
     ): void {
-        $pimpinan = User::whereIn('peran', ['ketufor', 'waketufor'])
+        $pimpinan = User::whereIn('peran', ['ketufor', 'waketufor', 'penasehat', 'ketua_harian'])
             ->where('aktif', true)
             ->get();
 
