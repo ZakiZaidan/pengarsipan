@@ -59,7 +59,7 @@
     @endif
 
     <div class="content">
-        {!! $naskah->isi_naskah !!}
+        {!! $isi_naskah !!}
     </div>
 </body>
 </html>

@@ -207,7 +207,7 @@ export default function NaskahDetailPage() {
     const ttdUrl = `${BASE_URL}/storage/${user.tanda_tangan_path}`;
     const namaUpper = user.nama_lengkap.toUpperCase();
     const jabatan = jabatanMap[`jabatan_${user.peran}`] || user.peran.toUpperCase();
-    const html = `<div contenteditable="false" style="display: inline-block; text-align: center; margin: 10px; cursor: move; border: 1px dashed transparent;" onmouseover="this.style.borderColor='#ccc'" onmouseout="this.style.borderColor='transparent'"><img src="${ttdUrl}" alt="TTE" style="max-height: 120px; width: auto; pointer-events: none;" /><br/><span style="font-size: 10pt; pointer-events: none;"><strong>${namaUpper}</strong><br/>${jabatan}</span></div>`;
+    const html = `<div contenteditable="false" style="display: inline-block; text-align: center; margin: 10px; cursor: move; border: 1px dashed transparent; max-width: 200px;" onmouseover="this.style.borderColor='#ccc'" onmouseout="this.style.borderColor='transparent'"><img src="${ttdUrl}" alt="TTE" style="max-height: 120px; width: auto; pointer-events: none;" /><br/><span style="font-size: 10pt; pointer-events: none; display: block;"><strong><u>${namaUpper}</u></strong><br/><span style="display: block; white-space: normal; word-break: break-word; line-height: 1.4;">${jabatan}</span></span></div>`;
     insertHtmlToJodit(html);
   };
 

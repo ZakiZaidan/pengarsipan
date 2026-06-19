@@ -68,15 +68,20 @@ class EksporPdfController extends Controller
             $kopDataUrl = 'data:image/' . $type . ';base64,' . base64_encode($imgData);
         }
 
+        // Konversi semua src gambar dalam isi_naskah ke base64
+        // agar DomPDF bisa render gambar (TTD, stempel) tanpa HTTP request
+        $isiNaskah = $this->convertImagesToBase64($naskah->isi_naskah);
+
         // Generate PDF
         $data = [
-            'naskah' => $naskah,
-            'dengan_kop' => $denganKop,
+            'naskah'           => $naskah,
+            'isi_naskah'       => $isiNaskah,
+            'dengan_kop'       => $denganKop,
             'dengan_watermark' => $denganWatermark,
-            'teks_watermark' => $teksWatermark,
-            'nama_organisasi' => $namaOrganisasi,
-            'alamat' => $alamat,
-            'kop_data_url' => $kopDataUrl,
+            'teks_watermark'   => $teksWatermark,
+            'nama_organisasi'  => $namaOrganisasi,
+            'alamat'           => $alamat,
+            'kop_data_url'     => $kopDataUrl,
         ];
 
         $paperSize = $ukuranKertas === 'F4' ? [0, 0, 612, 936] : 'A4';
@@ -131,5 +136,56 @@ class EksporPdfController extends Controller
         }
 
         return response()->download($fullPath);
+    }
+
+    /**
+     * Konversi semua src URL gambar di HTML menjadi base64 data URL
+     * agar DomPDF bisa render gambar tanpa HTTP request.
+     */
+    private function convertImagesToBase64(?string $html): string
+    {
+        if (!$html) return '';
+
+        // Temukan semua tag <img src="...">
+        return preg_replace_callback(
+            '/<img([^>]*?)src=["\']([^"\']+)["\']([^>]*?)>/i',
+            function ($matches) {
+                $before = $matches[1];
+                $src    = $matches[2];
+                $after  = $matches[3];
+
+                // Jika sudah base64, biarkan
+                if (str_starts_with($src, 'data:')) {
+                    return $matches[0];
+                }
+
+                // Ekstrak path relatif dari URL /storage/xxx
+                $storagePath = null;
+                if (preg_match('#/storage/(.+)$#', $src, $m)) {
+                    $storagePath = $m[1];
+                }
+
+                if ($storagePath && Storage::disk('public')->exists($storagePath)) {
+                    $filePath = Storage::disk('public')->path($storagePath);
+                    $ext      = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+                    $mimeMap  = [
+                        'jpg'  => 'image/jpeg',
+                        'jpeg' => 'image/jpeg',
+                        'png'  => 'image/png',
+                        'gif'  => 'image/gif',
+                        'webp' => 'image/webp',
+                    ];
+                    $mime    = $mimeMap[$ext] ?? 'image/png';
+                    $b64     = base64_encode(file_get_contents($filePath));
+                    $dataUrl = "data:{$mime};base64,{$b64}";
+
+                    return "<img{$before}src=\"{$dataUrl}\"{$after}>";
+                }
+
+                // Tidak bisa dikonversi, kembalikan asli
+                return $matches[0];
+            },
+            $html
+        );
     }
 }

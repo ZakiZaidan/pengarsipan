@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api, { BASE_URL } from '../../services/api';
 import useAuthStore from '../../stores/authStore';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
-import { Sliders, HelpCircle, Save, Upload, ShieldAlert, Award, FileText, CheckCircle } from 'lucide-react';
+import { Sliders, HelpCircle, Save, Upload, ShieldAlert, Award, FileText, CheckCircle, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function SistemPage() {
@@ -38,6 +38,18 @@ export default function SistemPage() {
 
   const isKetufor = user?.peran === 'ketufor';
   const isPimpinan = user?.peran === 'ketufor' || user?.peran === 'waketufor' || user?.peran === 'penasehat' || user?.peran === 'ketua_harian';
+
+  const formatRole = (peran) => {
+    switch (peran) {
+      case 'ketufor': return 'Ketua Formatur';
+      case 'waketufor': return 'Wakil Ketua Formatur';
+      case 'sekretaris': return 'Sekretaris';
+      case 'ketua_panitia': return 'Ketua Panitia';
+      case 'penasehat': return 'Penasehat';
+      case 'ketua_harian': return 'Ketua Harian';
+      default: return peran?.replace(/_/g, ' ')?.replace(/\b\w/g, c => c.toUpperCase()) || 'Pengguna';
+    }
+  };
 
   const fetchSettings = async () => {
     try {
@@ -172,7 +184,7 @@ export default function SistemPage() {
         }}>
           <ShieldAlert size={20} />
           <div style={{ fontSize: '13px' }}>
-            <strong>Hak Akses Terbatas:</strong> Anda masuk sebagai Wakil Ketua Formatur. Anda dapat melihat pengaturan dan mengunggah Kop surat, namun perubahan parameter teks lainnya hanya dapat dilakukan oleh <strong>Ketua Formatur</strong>.
+            <strong>Hak Akses Terbatas:</strong> Anda masuk sebagai <strong>{formatRole(user?.peran)}</strong>. Anda dapat melihat pengaturan{isPimpinan ? ' dan mengunggah Kop surat' : ''}, namun perubahan parameter teks lainnya hanya dapat dilakukan oleh <strong>Ketua Formatur</strong>.
           </div>
         </div>
       )}
